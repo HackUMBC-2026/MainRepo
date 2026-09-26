@@ -1,78 +1,239 @@
 extends CharacterBody2D
-
 class_name Player
+var heavy_attack_locked: bool = false
 
+@export_group("Health")
 @export var max_health: float = 100.0
 @export var health: float = 100.0
+@export var is_invincible: bool = false
+
+@export_group("Movement")
 @export var move_speed: float = 150.0
 @export var sprint_speed: float = 250.0
-@export var stamina: float = 240
-@export var C_MAX_STAMINA: float = 240
-@export var is_invincible: bool = false
-@export var dash_movement_lock_time: float = 0
-@export var is_dashing: bool = false
+@export var acceleration_time: float = 0.05
+@export var stopping_time: float = 0.03
+
+@export_group("Stamina")
+@export var stamina: float = 240.0
+@export var C_MAX_STAMINA: float = 240.0
+@export var sprint_start_threshold: float = 60.0
+@export var sprint_drain_per_second: float = 60.0
+@export var stamina_regen_per_second: float = 30.0
+
+@export_group("Dash")
 @export var C_DASH_SPEED: float = 1000.0
-@export var C_DASH_DISTANCE: float = 20
-var dash_vector: Vector2 = Vector2.ZERO
+@export var dash_duration: float = 0.18
+@export var dash_cooldown: float = 0.15
+@export var dash_buffer_time: float = 0.1
+@export var dash_stamina_cost: float = 60.0
+
+@export_group("Visuals")
+# Set to 0 to disable the stretch.
+@export var dash_stretch: float = 0.08
+
 @onready var sprite: Sprite2D = $Sprite2D
 
-
 var is_sprinting: bool = false
-func _physics_process(_delta: float) -> void:
+var is_dashing: bool = false
+var dash_movement_lock_time: float = 0.0
+var dash_vector: Vector2 = Vector2.ZERO
+
+var _facing_direction: Vector2 = Vector2.UP
+var _dash_buffer_left: float = 0.0
+var _dash_cooldown_left: float = 0.0
+var _base_sprite_scale: Vector2
+
+
+func _ready() -> void:
+	_base_sprite_scale = sprite.scale
+
+
+func _physics_process(delta: float) -> void:
+	if heavy_attack_locked:
+		velocity = Vector2.ZERO
+		is_sprinting = false
+		is_dashing = false
+		dash_movement_lock_time = 0.0
+		move_and_slide()
+		return
 	var direction := Input.get_vector(
 		"move_left",
 		"move_right",
 		"move_up",
-        "move_down"
+		"move_down"
 	)
-	if(Input.is_action_pressed("dash") && stamina > 120.0 && !isMovementLocked()):
-		dash_vector = direction
-		dash_movement_lock_time = C_DASH_DISTANCE
-		stamina -= 120
-		is_dashing = true
-	
-	if(is_dashing):
-		velocity = (dash_vector * C_DASH_SPEED) * (1.0 - 0.3 * (dash_movement_lock_time / 30.0) - 0.7 * pow(dash_movement_lock_time / 30.0, 7))
-		dash_movement_lock_time -= 1
-		move_and_slide()
-		if(!dash_movement_lock_time):
-			is_dashing = false
-		return
-		
-	
+
+	stamina = clampf(stamina, 0.0, C_MAX_STAMINA)
+
+	_dash_buffer_left = maxf(_dash_buffer_left - delta, 0.0)
+	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
+
+	# Remember a press briefly, including presses during a dash.
+	if Input.is_action_just_pressed("dash"):
+		_dash_buffer_left = maxf(dash_buffer_time, delta)
+
+	update_sprint_state()
+
+	if not is_dashing:
+		update_facing(direction)
+
+		if (
+			_dash_buffer_left > 0.0
+			and _dash_cooldown_left <= 0.0
+			and stamina >= dash_stamina_cost
+		):
+			start_dash(direction)
+
+	if is_dashing:
+		process_dash(direction, delta)
+	else:
+		update_stamina(direction, delta)
+		process_normal_movement(direction, delta)
+
+	update_sprite_stretch(delta)
+
+
+func update_sprint_state() -> void:
 	if not Input.is_action_pressed("sprint"):
 		is_sprinting = false
 	elif Input.is_action_just_pressed("sprint"):
-		is_sprinting = stamina > 60
+		is_sprinting = stamina > sprint_start_threshold
 
-	if stamina <= 0:
+	if stamina <= 0.0:
 		is_sprinting = false
 
-	if is_sprinting and direction != Vector2.ZERO:
-		stamina = maxf(stamina - 1, 0)
 
-		if stamina <= 0:
+func update_stamina(direction: Vector2, delta: float) -> void:
+	if is_sprinting and direction != Vector2.ZERO:
+		stamina = maxf(
+			stamina - sprint_drain_per_second * delta,
+			0.0
+		)
+
+		if stamina <= 0.0:
 			is_sprinting = false
 	else:
-		stamina = minf(stamina + 0.5, C_MAX_STAMINA)
+		stamina = minf(
+			stamina + stamina_regen_per_second * delta,
+			C_MAX_STAMINA
+		)
 
-	if is_sprinting:
-		velocity = direction * sprint_speed
+
+func normal_speed() -> float:
+	return sprint_speed if is_sprinting else move_speed
+
+
+func process_normal_movement(direction: Vector2, delta: float) -> void:
+	var current_speed := velocity.length()
+	var target_speed := normal_speed() * direction.length()
+	var rate: float
+
+	if target_speed > current_speed:
+		rate = normal_speed() / maxf(acceleration_time, 0.001)
 	else:
-		velocity = direction * move_speed
+		rate = sprint_speed / maxf(stopping_time, 0.001)
+
+	if direction != Vector2.ZERO:
+		# Smooth the speed, but turn immediately.
+		var new_speed := move_toward(
+			current_speed,
+			target_speed,
+			rate * delta
+		)
+		velocity = direction.normalized() * new_speed
+	else:
+		velocity = velocity.move_toward(Vector2.ZERO, rate * delta)
+
 	move_and_slide()
 
-	update_facing(direction)
+
+func start_dash(direction: Vector2) -> void:
+	dash_vector = (
+		direction.normalized()
+		if direction != Vector2.ZERO
+		else _facing_direction
+	)
+
+	stamina = maxf(stamina - dash_stamina_cost, 0.0)
+
+	if stamina <= 0.0:
+		is_sprinting = false
+
+	is_dashing = true
+	dash_movement_lock_time = maxf(dash_duration, 0.001)
+	_dash_buffer_left = 0.0
+
+	update_facing(dash_vector)
+
+
+func process_dash(direction: Vector2, delta: float) -> void:
+	var progress := clampf(
+		1.0 - dash_movement_lock_time / maxf(dash_duration, 0.001),
+		0.0,
+		1.0
+	)
+
+	# Starts fast, then drops toward ordinary movement speed.
+	var curve := 1.0 - 0.3 * progress - 0.7 * pow(progress, 7.0)
+	var speed := lerpf(normal_speed(), C_DASH_SPEED, curve)
+
+	velocity = dash_vector * speed
+	move_and_slide()
+
+	dash_movement_lock_time = maxf(
+		dash_movement_lock_time - delta,
+		0.0
+	)
+
+	if dash_movement_lock_time <= 0.0:
+		is_dashing = false
+		_dash_cooldown_left = maxf(dash_cooldown, 0.0)
+
+		# Hand control straight back to the held movement input.
+		velocity = direction * normal_speed()
+		update_facing(direction)
+
 
 func isMovementLocked() -> bool:
-	if(dash_movement_lock_time):
-		return true
-	return false
+	return is_dashing
+
+
 func update_facing(direction: Vector2) -> void:
 	if direction == Vector2.ZERO:
 		return
 
 	if absf(direction.x) > absf(direction.y):
-		sprite.rotation_degrees = 90.0 if direction.x > 0.0 else -90.0
+		if direction.x > 0.0:
+			_facing_direction = Vector2.RIGHT
+			sprite.rotation_degrees = 90.0
+		else:
+			_facing_direction = Vector2.LEFT
+			sprite.rotation_degrees = -90.0
 	else:
-		sprite.rotation_degrees = 180.0 if direction.y > 0.0 else 0.0
+		if direction.y > 0.0:
+			_facing_direction = Vector2.DOWN
+			sprite.rotation_degrees = 180.0
+		else:
+			_facing_direction = Vector2.UP
+			sprite.rotation_degrees = 0.0
+
+
+func update_sprite_stretch(delta: float) -> void:
+	var target_scale := _base_sprite_scale
+
+	if is_dashing:
+		var local_direction := dash_vector.rotated(
+			-sprite.global_rotation
+		).abs()
+
+		var stretch := Vector2(
+			1.0 + dash_stretch * (local_direction.x - local_direction.y),
+			1.0 + dash_stretch * (local_direction.y - local_direction.x)
+		)
+
+		target_scale *= stretch
+
+	sprite.scale = sprite.scale.lerp(
+		target_scale,
+		1.0 - exp(-25.0 * delta)
+	)
