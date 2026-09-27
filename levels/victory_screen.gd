@@ -5,6 +5,8 @@ extends Control
 
 
 func _ready() -> void:
+	GameMusic.stop()
+	SoundEffects.stop_all()
 	play_again.pressed.connect(restart_game)
 	$Center/Content/Buttons/Quit.pressed.connect(quit_game)
 	play_again.grab_focus()

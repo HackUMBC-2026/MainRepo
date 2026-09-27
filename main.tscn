@@ -7,10 +7,13 @@
 [ext_resource type="Texture2D" uid="uid://bs8vxqlxckr17" path="res://assets/lame_staris_upward.png" id="5_kek77"]
 [ext_resource type="PackedScene" uid="uid://cj3ocy7wso83q" path="res://levels/basic_wall_small_2.tscn" id="5_lquwl"]
 [ext_resource type="Texture2D" uid="uid://dh7ctsvk2elta" path="res://assets/floor_tile_stone_sad_with_moss_3.png" id="6_7mycd"]
-[ext_resource type="PackedScene" path="res://enemies/wandering_enemy.tscn" id="7_272bh"]
+[ext_resource type="PackedScene" uid="uid://b3qpg88hdqe2o" path="res://enemies/wandering_enemy.tscn" id="7_272bh"]
 [ext_resource type="PackedScene" path="res://levels/stairs.tscn" id="8_stairs"]
+[ext_resource type="PackedScene" path="res://levels/level_1_clutter.tscn" id="9_clutter"]
+[ext_resource type="Script" uid="uid://c8183cdvr75ji" path="res://levels/level_1.gd" id="10_level"]
 
 [node name="Main" type="Node2D" unique_id=1017274531]
+script = ExtResource("10_level")
 
 [node name="Player (CharacterBody2D)" parent="." unique_id=894568230 instance=ExtResource("1_ig7tw")]
 position = Vector2(125, 950)
@@ -37,6 +40,15 @@ script = ExtResource("4_lquwl")
 player = NodePath("../../Player (CharacterBody2D)")
 
 [node name="Level" type="Node2D" parent="." unique_id=324806368]
+
+[node name="Clutter" parent="Level" unique_id=489798014 instance=ExtResource("9_clutter")]
+
+[node name="OutsideDarkness" type="Polygon2D" parent="Level" unique_id=1126545047]
+z_index = 100
+color = Color(0.015, 0.012, 0.02, 1)
+invert_enabled = true
+invert_border = 4096.0
+polygon = PackedVector2Array(-126, -35, 792, -35, 792, 349, 440, 349, 440, 765, 216, 765, 216, 1021, 1, 1021, 1, 605, 257, 604, 257, 508, 2, 509, 2, 285, -126, 285)
 
 [node name="StairsToLevel2" parent="Level" unique_id=2134469371 instance=ExtResource("8_stairs")]
 position = Vector2(728, 30)
@@ -160,56 +172,12 @@ stretch_mode = 1
 
 [node name="WanderingEnemy" parent="Level" unique_id=368134692 instance=ExtResource("7_272bh")]
 position = Vector2(6.639, 26.889)
-auto_find_player = true
-vision_range = 220.0
-vision_angle_degrees = 110.0
-sight_collision_mask = 1
-initial_facing = Vector2(0, 1)
-turn_speed = 8.0
-show_vision_cone = false
-wander_speed = 40.0
-wander_radius = 100.0
-wander_walk_seconds = 2.5
-wander_pause_seconds = 0.7
 
 [node name="WanderingEnemy2" parent="Level" unique_id=1798052528 instance=ExtResource("7_272bh")]
 position = Vector2(0, 200)
-auto_find_player = true
-vision_range = 220.0
-vision_angle_degrees = 110.0
-sight_collision_mask = 1
-initial_facing = Vector2(0, 1)
-turn_speed = 8.0
-show_vision_cone = false
-wander_speed = 40.0
-wander_radius = 100.0
-wander_walk_seconds = 2.5
-wander_pause_seconds = 0.7
 
 [node name="WanderingEnemy3" parent="Level" unique_id=47635088 instance=ExtResource("7_272bh")]
 position = Vector2(350, 500)
-auto_find_player = true
-vision_range = 220.0
-vision_angle_degrees = 110.0
-sight_collision_mask = 1
-initial_facing = Vector2(0, 1)
-turn_speed = 8.0
-show_vision_cone = false
-wander_speed = 40.0
-wander_radius = 100.0
-wander_walk_seconds = 2.5
-wander_pause_seconds = 0.7
 
 [node name="WanderingEnemy4" parent="Level" unique_id=1575697783 instance=ExtResource("7_272bh")]
 position = Vector2(500, 30)
-auto_find_player = true
-vision_range = 220.0
-vision_angle_degrees = 110.0
-sight_collision_mask = 1
-initial_facing = Vector2(0, 1)
-turn_speed = 8.0
-show_vision_cone = false
-wander_speed = 40.0
-wander_radius = 100.0
-wander_walk_seconds = 2.5
-wander_pause_seconds = 0.7

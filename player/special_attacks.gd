@@ -59,8 +59,10 @@ func tick(delta: float) -> bool:
 			cooldowns.x = blade_cooldown
 	if Input.is_action_just_pressed("flame_blade") and blade_left <= 0.0 and cooldowns.x <= 0.0:
 		blade_left = blade_duration
+		SoundEffects.play_at("flame_blade", player.global_position)
 	if Input.is_action_just_pressed("flame_ring") and cooldowns.y <= 0.0:
 		cooldowns.y = ring_cooldown
+		SoundEffects.play_at("flame_ring", player.global_position)
 		ring_origin = player.global_position
 		ring_age = 0.0
 		ring_hits.clear()
@@ -85,6 +87,7 @@ func tick(delta: float) -> bool:
 			rushing = true
 			rush_hits.clear()
 			cooldowns.z = rush_cooldown
+			SoundEffects.play_at("flame_rush", player.global_position)
 			player.is_dashing = true
 			player.is_sprinting = false
 			player.dash_vector = player.global_position.direction_to(destination)

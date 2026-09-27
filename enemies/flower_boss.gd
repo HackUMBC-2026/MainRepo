@@ -62,6 +62,7 @@ func _ready() -> void:
 
 
 func begin_cast() -> void:
+	SoundEffects.play_at("flower_cast", global_position)
 	state = State.CAST
 	velocity = Vector2.ZERO
 	cast_age = 0.0

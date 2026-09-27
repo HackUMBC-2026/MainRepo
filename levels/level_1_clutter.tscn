@@ -1,0 +1,165 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/bookshelf_prototype.png" id="1_shelf"]
+[ext_resource type="Texture2D" path="res://assets/book.png" id="2_book"]
+[ext_resource type="Texture2D" path="res://assets/table_top_view.png" id="3_table"]
+[ext_resource type="Texture2D" path="res://assets/chair_top_view.png" id="4_chair"]
+[ext_resource type="Texture2D" path="res://assets/spiderweb.png" id="5_web"]
+[ext_resource type="Texture2D" path="res://assets/torch.png" id="6_torch"]
+
+[node name="Clutter" type="Node2D"]
+texture_filter = 1
+z_index = -1
+
+[node name="Entrance" type="Node2D" parent="."]
+
+[node name="WallTorchLeft" type="Sprite2D" parent="Entrance"]
+z_index = 2
+position = Vector2(17, 904)
+texture = ExtResource("6_torch")
+
+[node name="WallTorchRight" type="Sprite2D" parent="Entrance"]
+z_index = 2
+position = Vector2(200, 904)
+texture = ExtResource("6_torch")
+
+[node name="ForgottenChair" type="Sprite2D" parent="Entrance"]
+position = Vector2(51, 824)
+rotation = 0.15
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_chair")
+
+[node name="DroppedBook" type="Sprite2D" parent="Entrance"]
+position = Vector2(60, 850)
+rotation = -0.4
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("2_book")
+
+[node name="GuardAlcove" type="Node2D" parent="."]
+
+[node name="Table" type="Sprite2D" parent="GuardAlcove"]
+position = Vector2(68, 548)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("3_table")
+
+[node name="Chair" type="Sprite2D" parent="GuardAlcove"]
+position = Vector2(66, 581)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_chair")
+
+[node name="BookOnTable" type="Sprite2D" parent="GuardAlcove"]
+position = Vector2(73, 546)
+rotation = 0.3
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("2_book")
+
+[node name="CornerWeb" type="Sprite2D" parent="GuardAlcove"]
+position = Vector2(247, 516)
+flip_h = true
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("5_web")
+
+[node name="Corridor" type="Node2D" parent="."]
+
+[node name="SouthTorch" type="Sprite2D" parent="Corridor"]
+z_index = 2
+position = Vector2(424, 664)
+texture = ExtResource("6_torch")
+
+[node name="NorthTorch" type="Sprite2D" parent="Corridor"]
+z_index = 2
+position = Vector2(424, 432)
+texture = ExtResource("6_torch")
+
+[node name="TurnWeb" type="Sprite2D" parent="Corridor"]
+position = Vector2(48, 302)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("5_web")
+
+[node name="Study" type="Node2D" parent="."]
+
+[node name="WestShelf" type="Sprite2D" parent="Study"]
+position = Vector2(-66, 26)
+texture = ExtResource("1_shelf")
+
+[node name="EastShelf" type="Sprite2D" parent="Study"]
+position = Vector2(193, 26)
+texture = ExtResource("1_shelf")
+
+[node name="ReadingTable" type="Sprite2D" parent="Study"]
+position = Vector2(175, 185)
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("3_table")
+
+[node name="ReadingChair" type="Sprite2D" parent="Study"]
+position = Vector2(177, 222)
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_chair")
+
+[node name="OpenBook" type="Sprite2D" parent="Study"]
+position = Vector2(171, 181)
+rotation = -0.3
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("2_book")
+
+[node name="FallenBook" type="Sprite2D" parent="Study"]
+position = Vector2(-48, 65)
+rotation = 0.65
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("2_book")
+
+[node name="NorthwestWeb" type="Sprite2D" parent="Study"]
+position = Vector2(-80, 15)
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("5_web")
+
+[node name="SouthwestWeb" type="Sprite2D" parent="Study"]
+position = Vector2(-79, 237)
+flip_v = true
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("5_web")
+
+[node name="WestTorch" type="Sprite2D" parent="Study"]
+z_index = 2
+position = Vector2(-110, 137)
+texture = ExtResource("6_torch")
+
+[node name="EastTorch" type="Sprite2D" parent="Study"]
+z_index = 2
+position = Vector2(240, 137)
+texture = ExtResource("6_torch")
+
+[node name="UpperHall" type="Node2D" parent="."]
+
+[node name="WallShelf" type="Sprite2D" parent="UpperHall"]
+position = Vector2(301, 26)
+texture = ExtResource("1_shelf")
+
+[node name="SideTable" type="Sprite2D" parent="UpperHall"]
+position = Vector2(684, 277)
+scale = Vector2(0.75, 0.65)
+texture = ExtResource("3_table")
+
+[node name="SideChair" type="Sprite2D" parent="UpperHall"]
+position = Vector2(722, 277)
+rotation = 1.5707964
+scale = Vector2(0.45, 0.45)
+texture = ExtResource("4_chair")
+
+[node name="TableBook" type="Sprite2D" parent="UpperHall"]
+position = Vector2(684, 274)
+rotation = 0.25
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("2_book")
+
+[node name="CornerWeb" type="Sprite2D" parent="UpperHall"]
+position = Vector2(742, 299)
+flip_h = true
+flip_v = true
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("5_web")
+
+[node name="WallTorch" type="Sprite2D" parent="UpperHall"]
+z_index = 2
+position = Vector2(776, 176)
+texture = ExtResource("6_torch")

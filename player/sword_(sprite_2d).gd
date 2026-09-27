@@ -283,6 +283,7 @@ func defend_against_attack(attacker: Node, parryable: bool) -> float:
 
 	if parry_window_left > 0.0:
 		parry_window_left = 0.0
+		SoundEffects.play_at("parry", player.global_position)
 		if is_instance_valid(attacker) and attacker.has_method("stun"):
 			attacker.stun(parry_stun_seconds)
 		spawn_block_particles(true)
@@ -858,6 +859,7 @@ func set_striking(value: bool) -> void:
 		damaged_this_window.clear()
 	if value:
 		attack_window_started.emit(hilt_first)
+		SoundEffects.play_at("swing", global_position)
 	else:
 		attack_window_ended.emit()
 

@@ -74,6 +74,7 @@ func begin_cast() -> void:
 		recovery_left = target.binding_time_left + maxf(shackle_release_grace, 0.0)
 		return
 	state = State.CAST
+	SoundEffects.play_at("holy_cast", global_position)
 	velocity = Vector2.ZERO
 	cast_age = 0.0
 	holy_attack = next_holy_attack

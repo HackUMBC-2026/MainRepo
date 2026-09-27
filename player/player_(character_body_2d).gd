@@ -58,6 +58,7 @@ var _base_sprite_scale: Vector2
 
 
 func _ready() -> void:
+	GameMusic.start_music()
 	add_to_group("player")
 	sprite.rotation = 0.0
 	sprite.texture = FRONT_TEXTURE
@@ -233,6 +234,7 @@ func process_normal_movement(direction: Vector2, delta: float) -> void:
 
 
 func start_dash(direction: Vector2) -> void:
+	SoundEffects.play_at("dash", global_position)
 	dash_vector = (
 		direction.normalized()
 		if direction != Vector2.ZERO

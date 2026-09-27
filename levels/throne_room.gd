@@ -1,6 +1,6 @@
 extends Node2D
 
-const VICTORY_SCREEN = preload("res://levels/victory_screen.tscn")
+const END_CREDITS = preload("res://levels/end_credits.tscn")
 
 @export var final_boss: Enemy
 @onready var completion: Label = $HUD/Completion
@@ -31,14 +31,14 @@ func on_final_boss_exiting() -> void:
 	if is_instance_valid(final_boss) and final_boss.health <= 0.0 and get_tree().current_scene == self and not victory_pending:
 		victory_pending = true
 		# Finish freeing the boss before replacing the scene and its combat objects.
-		show_victory.call_deferred()
+		show_credits.call_deferred()
 
 
-func show_victory() -> void:
+func show_credits() -> void:
 	if not is_inside_tree() or get_tree().current_scene != self:
 		return
-	var error := get_tree().change_scene_to_packed(VICTORY_SCREEN)
+	var error := get_tree().change_scene_to_packed(END_CREDITS)
 	if error != OK:
-		# Keep a completion message visible if the victory scene cannot be opened.
+		# Keep a completion message visible if the credits scene cannot be opened.
 		completion.show()
-		push_error("Could not open the victory screen: %s" % error_string(error))
+		push_error("Could not open the credits: %s" % error_string(error))

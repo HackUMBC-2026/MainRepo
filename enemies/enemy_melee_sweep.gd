@@ -51,6 +51,8 @@ func advance(delta: float) -> void:
 	age += delta
 	var windup := maxf(enemy.sweep_windup_seconds, 0.05)
 	var duration := maxf(enemy.sweep_seconds, 0.05)
+	if previous_age < windup and age >= windup:
+		SoundEffects.play_at("swing", global_position)
 	if age >= windup and previous_age <= windup + duration and not hit_registered:
 		var previous_progress := clampf((previous_age - windup) / duration, 0.0, 1.0)
 		var progress := clampf((age - windup) / duration, 0.0, 1.0)
