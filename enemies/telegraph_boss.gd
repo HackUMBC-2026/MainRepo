@@ -6,7 +6,7 @@ enum State { IDLE, PURSUE, CAST, RECOVER }
 enum Attack { SLAM, CLEAVE, BARRAGE }
 
 @export_group("Boss")
-@export var boss_name: String = "Floral Suiter"
+@export var boss_name: String = "Floral Suitor"
 @export var engage_range: float = 280.0
 @export var disengage_range: float = 650.0
 @export var disengage_seconds: float = 3.0

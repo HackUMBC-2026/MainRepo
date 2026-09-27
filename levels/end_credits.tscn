@@ -11,7 +11,14 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_credits")
 credits_text = "Sound effects
-DRAGON-STUDIO"
+DRAGON-STUDIO
+
+Background music
+[url=https://pixabay.com/users/mondamusic-54713575/][b]MondaMusic[/b][/url]
+
+Ending music
+[b]Montogoronto[/b]
+A Night Full of Stars"
 scroll_speed = 45.0
 
 [node name="Background" type="ColorRect" parent="."]
@@ -50,14 +57,24 @@ theme_override_font_sizes/font_size = 32
 text = "CREDITS"
 horizontal_alignment = 1
 
-[node name="Credits" type="Label" parent="Clip/Content"]
+[node name="Credits" type="RichTextLabel" parent="Clip/Content"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.88, 0.82, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_colors/default_color = Color(0.9, 0.88, 0.82, 1)
+theme_override_font_sizes/normal_font_size = 20
+theme_override_font_sizes/bold_font_size = 20
 theme_override_constants/line_spacing = 8
-text = "Sound effects
-DRAGON-STUDIO"
-horizontal_alignment = 1
+bbcode_enabled = true
+text = "[center]Sound effects
+DRAGON-STUDIO
+
+Background music
+[url=https://pixabay.com/users/mondamusic-54713575/][b]MondaMusic[/b][/url]
+
+Ending music
+[b]Montogoronto[/b]
+A Night Full of Stars[/center]"
+fit_content = true
+scroll_active = false
 autowrap_mode = 2
 
 [node name="Continue" type="Button" parent="."]

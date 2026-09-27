@@ -5,7 +5,7 @@ extends Control
 
 
 func _ready() -> void:
-	GameMusic.stop()
+	GameMusic.start_ending_music()
 	SoundEffects.stop_all()
 	play_again.pressed.connect(restart_game)
 	$Center/Content/Buttons/Quit.pressed.connect(quit_game)
@@ -13,6 +13,7 @@ func _ready() -> void:
 
 
 func restart_game() -> void:
+	GameMusic.stop()
 	play_again.disabled = true
 	var error := get_tree().change_scene_to_file("res://main.tscn")
 	if error != OK:
@@ -23,4 +24,5 @@ func restart_game() -> void:
 
 
 func quit_game() -> void:
+	GameMusic.stop()
 	get_tree().quit()

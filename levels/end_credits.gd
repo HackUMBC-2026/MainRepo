@@ -1,23 +1,29 @@
 extends Control
 
-## Edit this text on the EndCredits root in the Inspector. Blank lines separate entries.
-@export_multiline var credits_text: String = "Sound effects\nDRAGON-STUDIO"
+## Edit this text on the EndCredits root in the Inspector. Blank lines separate entries; BBCode links are supported.
+@export_multiline var credits_text: String = "Sound effects\nDRAGON-STUDIO\n\nBackground music\n[url=https://pixabay.com/users/mondamusic-54713575/][b]MondaMusic[/b][/url]\n\nEnding music\n[b]Montogoronto[/b]\nA Night Full of Stars"
 @export_range(10.0, 120.0, 1.0) var scroll_speed: float = 45.0
 
 @onready var content: VBoxContainer = $Clip/Content
-@onready var credits: Label = $Clip/Content/Credits
+@onready var credits: RichTextLabel = $Clip/Content/Credits
 @onready var continue_button: Button = $Continue
 @onready var error_label: Label = $Error
 var leaving: bool = false
 var auto_advance: bool = true
 
 func _ready() -> void:
-	GameMusic.stop()
+	GameMusic.start_ending_music()
 	SoundEffects.stop_all()
-	credits.text = credits_text
+	credits.text = "[center]" + credits_text + "[/center]"
+	credits.meta_clicked.connect(open_credit_link)
 	content.position.y = size.y
 	continue_button.pressed.connect(show_end_menu)
 	continue_button.grab_focus()
+
+func open_credit_link(meta: Variant) -> void:
+	var url := str(meta)
+	if url.begins_with("https://"):
+		OS.shell_open(url)
 
 func _process(delta: float) -> void:
 	if leaving or not auto_advance:
