@@ -7,11 +7,13 @@ class_name Enemy
 @export var stop_distance: float = 24.0
 @export var contact_damage: float = 10.0
 @export var attack_interval: float = 0.8
+@export var contact_attack_parryable: bool = true
 
 @onready var attack_range: Area2D = $AttackRange
 
 var attack_cooldown_left: float = 0.0
 var health: float
+var stun_left: float = 0.0
 
 
 func _ready() -> void:
@@ -19,6 +21,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if stun_left > 0.0:
+		stun_left = maxf(stun_left - delta, 0.0)
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
 	if not is_instance_valid(target):
 		velocity = Vector2.ZERO
 		return
@@ -34,8 +41,17 @@ func _physics_process(delta: float) -> void:
 	attack_cooldown_left = maxf(attack_cooldown_left - delta, 0.0)
 
 	if attack_cooldown_left <= 0.0 and attack_range.overlaps_body(target):
-		target.take_damage(contact_damage)
+		target.receive_attack(
+			contact_damage,
+			self,
+			contact_attack_parryable
+		)
 		attack_cooldown_left = attack_interval
+
+
+func stun(duration: float) -> void:
+	stun_left = maxf(stun_left, duration)
+	velocity = Vector2.ZERO
 
 
 func take_damage(amount: float) -> void:

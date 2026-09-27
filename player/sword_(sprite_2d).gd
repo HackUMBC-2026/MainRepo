@@ -17,12 +17,19 @@ enum AttackType { NONE, LEFT, CENTER, HEAVY }
 @export_group("Floating")
 @export var orbit_speed: float = 10.0
 @export var blade_rotation_speed: float = 8.0
-@export var center_orbit_radius: float = 36.0
 @export var hover_amount: float = 2.0
 @export var hover_frequency: float = 0.8
 @export var sprint_trail_distance: float = 7.0
 @export var dash_trail_distance: float = 18.0
 @export var trail_follow_speed: float = 14.0
+
+@export_group("Side View")
+@export var side_layer_switch_x: float = 8.0
+
+@export_group("Magic Trail")
+@export var magic_handle_offset: Vector2 = Vector2(0.0, 12.0)
+@export var magic_blade_offset: Vector2 = Vector2(0.0, -24.0)
+@export var magic_emission_radius: float = 3.0
 
 @export_group("Left: Double Swipe")
 @export var left_range: float = 100.0
@@ -57,6 +64,15 @@ enum AttackType { NONE, LEFT, CENTER, HEAVY }
 @export var heavy_damage: float = 3.0
 @export var heavy_impact_radius: float = 20.0
 
+@export_group("Parry")
+@export var parry_window_seconds: float = 0.25
+@export var parry_stun_seconds: float = 1.0
+@export var block_distance: float = 28.0
+@export var late_block_damage_multiplier: float = 0.5
+
+@onready var anchor: Node2D = get_parent() as Node2D
+@onready var player: Player = anchor.get_parent() as Player
+@onready var positions_root: Node2D = player.get_node("SwordPositions") as Node2D
 @onready var blade_hitbox: Area2D = $BladeHitbox
 @onready var hilt_hitbox: Area2D = $HiltHitbox
 
@@ -65,13 +81,19 @@ var pending_heavy_hit: bool = false
 var pending_heavy_position: Vector2 = Vector2.ZERO
 
 var selected_position := SwordPosition.RIGHT
+var via_middle_key: bool = false
+var transition_active: bool = false
+var segment_start_position: int = SwordPosition.RIGHT
+var waypoint_facing: Vector2 = Vector2.ZERO
+var is_blocking: bool = false
+var parry_window_left: float = 0.0
 var hilt_first: bool = false
 var is_attacking: bool = false
 var is_striking: bool = false
 
 var elapsed_time: float = 0.0
 var orbit_angle: float = 0.0
-var orbit_radius: float = 24.0
+var magic_trail: CPUParticles2D
 var current_orbit_radius: float = 24.0
 var resting_rotation: float = 0.0
 var trail_offset: Vector2 = Vector2.ZERO
@@ -98,29 +120,47 @@ var shake_left: float = 0.0
 var shake_offset: Vector2 = Vector2.ZERO
 var camera_rest_offset: Vector2 = Vector2.ZERO
 
-@onready var anchor: Node2D = get_parent() as Node2D
-@onready var player: Player = anchor.get_parent() as Player
-
-
 func _ready() -> void:
 	if not is_instance_valid(player_sprite):
 		push_error("Assign the player's Sprite2D to Player Sprite.")
 		set_process(false)
 		return
 
-	var starting_offset := anchor.position + position
-
-	if starting_offset.length() > 0.0:
-		orbit_radius = starting_offset.length()
-		orbit_angle = Vector2.UP.angle_to(starting_offset)
-
-	current_orbit_radius = orbit_radius
+	orbit_angle = resting_angle()
+	current_orbit_radius = resting_radius()
 	resting_rotation = rotation
 
 	if is_instance_valid(camera):
 		camera_rest_offset = camera.offset
-		
-func _physics_process(_delta: float) -> void:
+
+	setup_magic_trail()
+
+
+func _process(delta: float) -> void:
+	elapsed_time += delta
+	cooldown_left = maxf(cooldown_left - delta, 0.0)
+
+	if not is_attacking and not is_blocking:
+		read_sword_inputs()
+
+		if Input.is_action_just_pressed("attack") and cooldown_left <= 0.0:
+			start_attack()
+
+	if is_attacking:
+		update_attack(delta)
+	elif is_blocking:
+		update_block(delta)
+	else:
+		update_idle(delta)
+
+	update_trail(delta)
+	update_shake(delta)
+	update_visuals(delta)
+	update_magic_trail()
+
+
+func _physics_process(delta: float) -> void:
+	update_parry(delta)
 	if is_striking:
 		var hitbox := hilt_hitbox if hilt_first else blade_hitbox
 		var damage := (
@@ -138,67 +178,220 @@ func _physics_process(_delta: float) -> void:
 		pending_heavy_hit = false
 		damage_heavy_impact()
 
-func _process(delta: float) -> void:
-	elapsed_time += delta
-	cooldown_left = maxf(cooldown_left - delta, 0.0)
 
-	if not is_attacking:
-		read_sword_inputs()
+func update_parry(delta: float) -> void:
+	if is_blocking:
+		if not Input.is_action_pressed("parry"):
+			is_blocking = false
+			parry_window_left = 0.0
+		else:
+			parry_window_left = maxf(parry_window_left - delta, 0.0)
 
-		if Input.is_action_just_pressed("attack") and cooldown_left <= 0.0:
-			start_attack()
+	elif not is_attacking and Input.is_action_just_pressed("parry"):
+		is_blocking = true
+		parry_window_left = parry_window_seconds
 
-	if is_attacking:
-		update_attack(delta)
-	else:
-		update_idle(delta)
 
-	update_trail(delta)
-	update_shake(delta)
-	update_visuals(delta)
+func defend_against_attack(attacker: Node, parryable: bool) -> float:
+	if not is_blocking or not parryable:
+		return 1.0
+
+	if parry_window_left > 0.0:
+		parry_window_left = 0.0
+		if is_instance_valid(attacker) and attacker.has_method("stun"):
+			attacker.stun(parry_stun_seconds)
+		spawn_block_particles(true)
+		return 0.0
+
+	spawn_block_particles(false)
+	return late_block_damage_multiplier
+
+
+func spawn_block_particles(perfect: bool) -> void:
+	var particles := CPUParticles2D.new()
+	particles.one_shot = true
+	particles.explosiveness = 1.0
+	particles.local_coords = false
+	particles.z_index = 10
+	particles.amount = 14 if perfect else 9
+	particles.lifetime = 0.18 if perfect else 0.30
+	particles.direction = Vector2.UP
+	particles.spread = 180.0
+	particles.gravity = Vector2.ZERO
+	particles.initial_velocity_min = 50.0 if perfect else 12.0
+	particles.initial_velocity_max = 100.0 if perfect else 35.0
+	particles.scale_amount_min = 2.0 if perfect else 3.0
+	particles.scale_amount_max = 3.0 if perfect else 5.0
+	particles.color = (
+		Color(1.0, 0.88, 0.4)
+		if perfect
+		else Color(0.65, 0.65, 0.65, 0.75)
+	)
+	particles.emitting = false
+
+	get_tree().current_scene.add_child(particles)
+	particles.global_position = global_position
+	particles.finished.connect(particles.queue_free)
+	particles.emitting = true
+
+
+func update_block(delta: float) -> void:
+	var mouse_offset := player.to_local(
+		player.get_global_mouse_position()
+	)
+
+	if mouse_offset.length_squared() < 1.0:
+		mouse_offset = Vector2.UP.rotated(player.facing_angle())
+
+	var mouse_angle := Vector2.UP.angle_to(mouse_offset)
+	var amount := 1.0 - exp(-orbit_speed * delta)
+
+	orbit_angle = lerp_angle(orbit_angle, mouse_angle, amount)
+	current_orbit_radius = lerpf(
+		current_orbit_radius,
+		block_distance,
+		amount
+	)
 
 
 func read_sword_inputs() -> void:
+	var old_position := selected_position
+	var next_position := selected_position
+
 	if Input.is_action_just_pressed("sword_left"):
-		selected_position = SwordPosition.LEFT
+		next_position = SwordPosition.LEFT
 	elif Input.is_action_just_pressed("sword_center"):
-		selected_position = SwordPosition.CENTER
+		next_position = SwordPosition.CENTER
 	elif Input.is_action_just_pressed("sword_right"):
-		selected_position = SwordPosition.RIGHT
+		next_position = SwordPosition.RIGHT
+
+	if next_position != selected_position:
+		selected_position = next_position
+		via_middle_key = (
+			(old_position == SwordPosition.LEFT and next_position == SwordPosition.RIGHT)
+			or (old_position == SwordPosition.RIGHT and next_position == SwordPosition.LEFT)
+		)
+		transition_active = true
+		segment_start_position = old_position
+		waypoint_facing = player.facing_direction()
 
 	if Input.is_action_just_pressed("sword_flip"):
 		hilt_first = not hilt_first
 
 
-func position_angle() -> float:
-	match selected_position:
+func is_side_facing() -> bool:
+	return player.facing_direction().x != 0.0
+
+
+func slot_for_position(key_position: int) -> int:
+	if player.facing_direction() == Vector2.LEFT:
+		if key_position == SwordPosition.LEFT:
+			return SwordPosition.CENTER
+		if key_position == SwordPosition.CENTER:
+			return SwordPosition.LEFT
+	return key_position
+
+
+func resting_slot() -> int:
+	return slot_for_position(selected_position)
+
+
+func target_key_position() -> int:
+	return SwordPosition.CENTER if via_middle_key else selected_position
+
+
+func marker_for_slot(slot: int) -> Marker2D:
+	var facing_name: String
+	var facing := player.facing_direction()
+	if facing == Vector2.UP:
+		facing_name = "Up"
+	elif facing == Vector2.DOWN:
+		facing_name = "Down"
+	elif facing == Vector2.LEFT:
+		facing_name = "Left"
+	else:
+		facing_name = "Right"
+
+	var slot_name: String
+	match slot:
 		SwordPosition.LEFT:
-			return -PI / 2.0
+			slot_name = "Left"
 		SwordPosition.RIGHT:
-			return PI / 2.0
+			slot_name = "Right"
 		_:
-			return 0.0
+			slot_name = "Center"
+
+	return positions_root.get_node(NodePath("%s/%s" % [facing_name, slot_name])) as Marker2D
+
+
+func marker_position(slot: int) -> Vector2:
+	return player.to_local(marker_for_slot(slot).global_position)
+
+
+func resting_center() -> Vector2:
+	return marker_position(resting_slot())
+
+
+func resting_angle() -> float:
+	var center := resting_center()
+	if center.length_squared() < 0.01:
+		return orbit_angle
+	return fposmod(Vector2.UP.angle_to(center), TAU)
 
 
 func resting_radius() -> float:
-	if selected_position == SwordPosition.CENTER:
-		return center_orbit_radius
-	return orbit_radius
+	return resting_center().length()
 
 
 func update_idle(delta: float) -> void:
-	var amount := 1.0 - exp(-orbit_speed * delta)
+	if transition_active and player.facing_direction() != waypoint_facing:
+		via_middle_key = false
+		transition_active = false
 
-	orbit_angle = lerp_angle(
-		orbit_angle,
-		player_sprite.rotation + position_angle(),
-		amount
+	var target_position := target_key_position()
+	var target_center := marker_position(slot_for_position(target_position))
+	var target_angle := fposmod(Vector2.UP.angle_to(target_center), TAU)
+	var amount := 1.0 - exp(-orbit_speed * delta)
+	var current_angle := fposmod(orbit_angle, TAU)
+
+	# Use the upper arc where the screen positions and key order differ.
+	var facing := player.facing_direction()
+	var upper_arc_forward := transition_active and (
+		(facing == Vector2.LEFT and segment_start_position == SwordPosition.CENTER and target_position == SwordPosition.RIGHT)
+		or (facing == Vector2.RIGHT and segment_start_position == SwordPosition.LEFT and target_position == SwordPosition.CENTER)
 	)
+	var upper_arc_reverse := transition_active and (
+		(facing == Vector2.LEFT and segment_start_position == SwordPosition.RIGHT and target_position == SwordPosition.CENTER)
+		or (facing == Vector2.RIGHT and segment_start_position == SwordPosition.CENTER and target_position == SwordPosition.LEFT)
+	)
+
+	if upper_arc_forward:
+		if current_angle < PI:
+			current_angle += TAU
+		orbit_angle = lerpf(current_angle, target_angle + TAU, amount)
+	elif upper_arc_reverse:
+		if current_angle > PI:
+			current_angle -= TAU
+		orbit_angle = lerpf(current_angle, target_angle - TAU, amount)
+	elif is_side_facing() and current_angle >= PI / 2.0 and current_angle <= 3.0 * PI / 2.0:
+		orbit_angle = lerpf(current_angle, target_angle, amount)
+	else:
+		orbit_angle = lerp_angle(orbit_angle, target_angle, amount)
+
 	current_orbit_radius = lerpf(
 		current_orbit_radius,
-		resting_radius(),
+		target_center.length(),
 		amount
 	)
+
+	if transition_active:
+		var current_center := Vector2.UP.rotated(orbit_angle) * current_orbit_radius
+		if current_center.distance_to(target_center) <= 3.0:
+			if via_middle_key:
+				via_middle_key = false
+				segment_start_position = SwordPosition.CENTER
+			else:
+				transition_active = false
 
 
 func striking_tip_distance() -> float:
@@ -211,7 +404,7 @@ func capture_mouse_aim(max_range: float) -> void:
 	)
 
 	if mouse_offset.length_squared() < 1.0:
-		mouse_offset = Vector2.UP.rotated(player_sprite.rotation)
+		mouse_offset = Vector2.UP.rotated(player.facing_angle())
 
 	aim_direction = mouse_offset.normalized()
 	aim_angle = Vector2.UP.angle_to(aim_direction)
@@ -226,6 +419,8 @@ func capture_mouse_aim(max_range: float) -> void:
 
 
 func start_attack() -> void:
+	via_middle_key = false
+	transition_active = false
 	attack_start_angle = orbit_angle
 	attack_start_center = (
 		Vector2.UP.rotated(orbit_angle) * current_orbit_radius
@@ -347,7 +542,7 @@ func update_left_attack() -> void:
 
 			attack_angle = lerp_angle(
 				aim_angle - half_arc,
-				player_sprite.rotation + position_angle(),
+				resting_angle(),
 				progress
 			)
 			var radius := lerpf(
@@ -417,7 +612,7 @@ func update_thrust() -> void:
 
 			var rest_center := (
 				Vector2.UP.rotated(
-					player_sprite.rotation + position_angle()
+					resting_angle()
 				) * resting_radius()
 			)
 
@@ -427,7 +622,7 @@ func update_thrust() -> void:
 			)
 			attack_angle = lerp_angle(
 				aim_angle,
-				player_sprite.rotation + position_angle(),
+				resting_angle(),
 				progress
 			)
 
@@ -509,7 +704,7 @@ func update_heavy_attack(delta: float) -> void:
 			)
 			var rest_center := (
 				Vector2.UP.rotated(
-					player_sprite.rotation + position_angle()
+					resting_angle()
 				) * resting_radius()
 			)
 
@@ -519,7 +714,7 @@ func update_heavy_attack(delta: float) -> void:
 			)
 			attack_angle = lerp_angle(
 				aim_angle,
-				player_sprite.rotation + position_angle(),
+				resting_angle(),
 				progress
 			)
 
@@ -539,6 +734,7 @@ func set_striking(value: bool) -> void:
 	else:
 		attack_window_ended.emit()
 
+
 func damage_heavy_impact() -> void:
 	var circle := CircleShape2D.new()
 	circle.radius = heavy_impact_radius
@@ -554,7 +750,8 @@ func damage_heavy_impact() -> void:
 		if body is Enemy:
 			if body.global_position.distance_to(player.global_position) <= heavy_range:
 				body.take_damage(heavy_damage)
-				
+
+
 func trigger_heavy_impact() -> void:
 	var impact_position := player.to_global(
 		aim_direction * tip_target_distance
@@ -622,6 +819,55 @@ func update_shake(delta: float) -> void:
 			camera.offset = camera_rest_offset
 
 
+func setup_magic_trail() -> void:
+	magic_trail = CPUParticles2D.new()
+	magic_trail.name = "MagicTrail"
+	magic_trail.amount = 10
+	magic_trail.lifetime = 0.7
+	magic_trail.local_coords = false
+	magic_trail.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	magic_trail.emission_sphere_radius = magic_emission_radius
+	magic_trail.direction = Vector2.DOWN
+	magic_trail.spread = 20.0
+	magic_trail.gravity = Vector2(0.0, 120.0)
+	magic_trail.initial_velocity_min = 0.0
+	magic_trail.initial_velocity_max = 5.0
+	magic_trail.scale_amount_min = 1.0
+	magic_trail.scale_amount_max = 2.0
+	magic_trail.color = Color(1.0, 0.45, 0.75, 0.85)
+
+	var fade := Gradient.new()
+	fade.set_color(0, Color.WHITE)
+	fade.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+	magic_trail.color_ramp = fade
+	magic_trail.position = magic_handle_offset
+	add_child(magic_trail)
+	magic_trail.global_rotation = 0.0
+
+
+func update_magic_trail() -> void:
+	magic_trail.position = magic_blade_offset if hilt_first else magic_handle_offset
+	magic_trail.global_rotation = 0.0
+
+
+func update_draw_order(center: Vector2) -> void:
+	var behind_player := false
+	if not is_attacking and not is_blocking:
+		var facing := player.facing_direction()
+		if facing == Vector2.LEFT:
+			var upper_arc_transition := transition_active and (
+				(segment_start_position == SwordPosition.CENTER and target_key_position() == SwordPosition.RIGHT)
+				or (segment_start_position == SwordPosition.RIGHT and target_key_position() == SwordPosition.CENTER)
+			)
+			behind_player = upper_arc_transition or center.x > side_layer_switch_x
+		elif facing == Vector2.RIGHT:
+			behind_player = center.x < 0.0
+		elif facing == Vector2.UP and selected_position == SwordPosition.CENTER:
+			behind_player = true
+
+	z_index = player_sprite.z_index - anchor.z_index + (-1 if behind_player else 1)
+
+
 func update_visuals(delta: float) -> void:
 	var phase := elapsed_time * TAU * hover_frequency
 	var hover_offset := Vector2(
@@ -639,6 +885,7 @@ func update_visuals(delta: float) -> void:
 			* current_orbit_radius
 		)
 
+	update_draw_order(center)
 	global_position = (
 		player.to_global(center)
 		+ hover_offset
@@ -650,10 +897,12 @@ func update_visuals(delta: float) -> void:
 	var target_rotation: float
 
 	if is_attacking:
-		# Point the striking end outward during attacks.
 		target_rotation = player.global_rotation + attack_angle
+	elif is_blocking:
+		# The blade lies sideways across the mouse direction.
+		target_rotation = player.global_rotation + orbit_angle + PI / 2.0
 	else:
-		target_rotation = player_sprite.global_rotation
+		target_rotation = (player.global_rotation + player.facing_angle())
 
 	target_rotation += resting_rotation
 

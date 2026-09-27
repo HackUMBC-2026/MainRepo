@@ -1,10 +1,15 @@
 extends CharacterBody2D
 class_name Player
-var heavy_attack_locked: bool = false
+
+const FRONT_TEXTURE: Texture2D = preload("res://assets/FrontFeatherJoan.png")
+const BACK_TEXTURE: Texture2D = preload("res://assets/Joan back.png")
+const RIGHT_TEXTURE: Texture2D = preload("res://assets/ProfileJoan.png")
+const LEFT_TEXTURE: Texture2D = preload("res://assets/ProfileLeftJoan.png")
 
 @export_group("Health")
 @export var max_health: float = 100.0
 @export var health: float = 100.0
+@export var invincibility_duration: float = 0.6
 @export var is_invincible: bool = false
 
 @export_group("Movement")
@@ -32,20 +37,25 @@ var heavy_attack_locked: bool = false
 @export var dash_stretch: float = 0.08
 
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var sword: Node2D = $"SwordAnchor (Node2D)/Sword (Sprite2D)"
 
+var heavy_attack_locked: bool = false
+var invincibility_left: float = 0.0
 var is_sprinting: bool = false
 var is_dashing: bool = false
 var dash_movement_lock_time: float = 0.0
 var dash_vector: Vector2 = Vector2.ZERO
 
-var _facing_direction: Vector2 = Vector2.UP
+var _facing_direction: Vector2 = Vector2.DOWN
 var _dash_buffer_left: float = 0.0
 var _dash_cooldown_left: float = 0.0
 var _base_sprite_scale: Vector2
 
-@export var invincibility_duration: float = 0.6
 
-var invincibility_left: float = 0.0
+func _ready() -> void:
+	sprite.rotation = 0.0
+	sprite.texture = FRONT_TEXTURE
+	_base_sprite_scale = sprite.scale
 
 
 func _process(delta: float) -> void:
@@ -69,9 +79,23 @@ func take_damage(amount: float) -> void:
 
 	is_invincible = true
 	invincibility_left = invincibility_duration
-	
-func _ready() -> void:
-	_base_sprite_scale = sprite.scale
+
+
+func receive_attack(
+	amount: float,
+	attacker: Node,
+	parryable: bool = true
+) -> void:
+	var damage_multiplier := 1.0
+	if is_instance_valid(sword) and sword.has_method("defend_against_attack"):
+		damage_multiplier = float(
+			sword.call("defend_against_attack", attacker, parryable)
+		)
+
+	if damage_multiplier <= 0.0:
+		return
+
+	take_damage(amount * damage_multiplier)
 
 
 func _physics_process(delta: float) -> void:
@@ -224,24 +248,36 @@ func isMovementLocked() -> bool:
 	return is_dashing
 
 
+func facing_direction() -> Vector2:
+	return _facing_direction
+
+
+func facing_angle() -> float:
+	return Vector2.UP.angle_to(_facing_direction)
+
+
 func update_facing(direction: Vector2) -> void:
 	if direction == Vector2.ZERO:
 		return
 
+	var new_facing: Vector2
 	if absf(direction.x) > absf(direction.y):
-		if direction.x > 0.0:
-			_facing_direction = Vector2.RIGHT
-			sprite.rotation_degrees = 90.0
-		else:
-			_facing_direction = Vector2.LEFT
-			sprite.rotation_degrees = -90.0
+		new_facing = Vector2.RIGHT if direction.x > 0.0 else Vector2.LEFT
 	else:
-		if direction.y > 0.0:
-			_facing_direction = Vector2.DOWN
-			sprite.rotation_degrees = 180.0
-		else:
-			_facing_direction = Vector2.UP
-			sprite.rotation_degrees = 0.0
+		new_facing = Vector2.DOWN if direction.y > 0.0 else Vector2.UP
+
+	if new_facing == _facing_direction:
+		return
+
+	_facing_direction = new_facing
+	if new_facing == Vector2.RIGHT:
+		sprite.texture = RIGHT_TEXTURE
+	elif new_facing == Vector2.LEFT:
+		sprite.texture = LEFT_TEXTURE
+	elif new_facing == Vector2.DOWN:
+		sprite.texture = FRONT_TEXTURE
+	else:
+		sprite.texture = BACK_TEXTURE
 
 
 func update_sprite_stretch(delta: float) -> void:
