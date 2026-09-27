@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://bq3wy2602nigk"]
 
+[ext_resource type="Texture2D" uid="uid://6dau2pccg4te" path="res://assets/wall_large_stones__2.png" id="1_8w72g"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7imt7"]
 size = Vector2(256, 32)
 
@@ -8,6 +10,87 @@ size = Vector2(256, 32)
 [node name="Polygon2D" type="Polygon2D" parent="." unique_id=389557725]
 color = Color(0, 0, 0, 1)
 polygon = PackedVector2Array(-128, -16, 128, -16, 128, 16, -128, 16)
+uv = PackedVector2Array(-128, -16, 128, -16, 128, 16, -128, 16)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=737110676]
 shape = SubResource("RectangleShape2D_7imt7")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=678131935]
+texture_filter = 1
+offset_left = -128.0
+offset_top = -16.0
+offset_right = -88.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TextureRect2" type="TextureRect" parent="." unique_id=202328518]
+texture_filter = 1
+offset_left = -128.0
+offset_top = -16.0
+offset_right = -88.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TextureRect3" type="TextureRect" parent="." unique_id=1002381054]
+texture_filter = 1
+offset_left = -88.0
+offset_top = -16.0
+offset_right = -48.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TextureRect4" type="TextureRect" parent="." unique_id=438136421]
+texture_filter = 1
+offset_left = -48.0
+offset_top = -16.0
+offset_right = -8.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TextureRect5" type="TextureRect" parent="." unique_id=211640662]
+texture_filter = 1
+offset_left = -8.0
+offset_top = -16.0
+offset_right = 32.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TextureRect6" type="TextureRect" parent="." unique_id=655722542]
+texture_filter = 1
+offset_left = 32.0
+offset_top = -16.0
+offset_right = 72.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TextureRect7" type="TextureRect" parent="." unique_id=1231559574]
+texture_filter = 1
+offset_left = 72.0
+offset_top = -16.0
+offset_right = 112.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="TextureRect8" type="TextureRect" parent="." unique_id=1055798702]
+texture_filter = 1
+offset_left = 112.0
+offset_top = -16.0
+offset_right = 128.0
+offset_bottom = 16.0
+texture = ExtResource("1_8w72g")
+expand_mode = 1
+stretch_mode = 1

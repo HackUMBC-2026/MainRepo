@@ -4,17 +4,13 @@
 [ext_resource type="PackedScene" uid="uid://bq3wy2602nigk" path="res://levels/basic_wall.tscn" id="2_0xm2m"]
 [ext_resource type="Script" uid="uid://dfs3wj51iwun" path="res://player/stamina_bar_(progress_bar).gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://dowwp2dvl2tys" path="res://player/health_bar_(progress_bar).gd" id="4_lquwl"]
+[ext_resource type="PackedScene" uid="uid://cj3ocy7wso83q" path="res://levels/basic_wall_small.tscn" id="5_lquwl"]
+[ext_resource type="Texture2D" uid="uid://dh7ctsvk2elta" path="res://assets/floor_tile_stone_sad_with_moss_3.png" id="6_7mycd"]
 
 [node name="Main" type="Node2D" unique_id=1017274531]
 
 [node name="Player (CharacterBody2D)" parent="." unique_id=894568230 instance=ExtResource("1_ig7tw")]
-position = Vector2(320, 180)
-
-[node name="Wall (StaticBody2D)" parent="." unique_id=1469273161 instance=ExtResource("2_0xm2m")]
-position = Vector2(320, 80)
-
-[node name="Wall (StaticBody2D)2" parent="." unique_id=978895573 instance=ExtResource("2_0xm2m")]
-position = Vector2(320, 280)
+position = Vector2(125, 950)
 
 [node name="HUD (CanvasLayer)" type="CanvasLayer" parent="." unique_id=1293247393]
 
@@ -35,3 +31,113 @@ offset_bottom = 66.0
 max_value = 240.0
 script = ExtResource("4_lquwl")
 player = NodePath("../../Player (CharacterBody2D)")
+
+[node name="Level" type="Node2D" parent="." unique_id=324806368]
+
+[node name="Wall (StaticBody2D)6" parent="Level" unique_id=1469273161 instance=ExtResource("2_0xm2m")]
+position = Vector2(424, 605)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)3" parent="Level" unique_id=1954402774 instance=ExtResource("2_0xm2m")]
+position = Vector2(17, 893)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)4" parent="Level" unique_id=451680833 instance=ExtResource("2_0xm2m")]
+position = Vector2(200, 893)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)5" parent="Level" unique_id=2029382168 instance=ExtResource("2_0xm2m")]
+position = Vector2(312, 749)
+rotation = 3.1415927
+
+[node name="Wall (StaticBody2D)" parent="Level" unique_id=1367977590 instance=ExtResource("2_0xm2m")]
+position = Vector2(-110, 125)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)20" parent="Level" unique_id=801861060 instance=ExtResource("2_0xm2m")]
+position = Vector2(240, 125)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)23" parent="Level" unique_id=1553927269 instance=ExtResource("2_0xm2m")]
+position = Vector2(384, -19)
+
+[node name="Wall (StaticBody2D)24" parent="Level" unique_id=465355280 instance=ExtResource("2_0xm2m")]
+position = Vector2(640, -19)
+
+[node name="Wall (StaticBody2D)27" parent="Level" unique_id=2021728373 instance=ExtResource("2_0xm2m")]
+position = Vector2(640, -19)
+
+[node name="Wall (StaticBody2D)28" parent="Level" unique_id=1761378211 instance=ExtResource("2_0xm2m")]
+position = Vector2(776, 189)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)25" parent="Level" unique_id=647142733 instance=ExtResource("2_0xm2m")]
+position = Vector2(536, 333)
+
+[node name="Wall (StaticBody2D)21" parent="Level" unique_id=882019872 instance=ExtResource("2_0xm2m")]
+position = Vector2(128, -19)
+
+[node name="Wall (StaticBody2D)2" parent="Level" unique_id=1801144762 instance=ExtResource("5_lquwl")]
+position = Vector2(17, 701)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)7" parent="Level" unique_id=848861325 instance=ExtResource("5_lquwl")]
+position = Vector2(17, 701)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)8" parent="Level" unique_id=435396398 instance=ExtResource("5_lquwl")]
+position = Vector2(273, 573)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)9" parent="Level" unique_id=310003435 instance=ExtResource("5_lquwl")]
+position = Vector2(424, 413)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)10" parent="Level" unique_id=558679027 instance=ExtResource("5_lquwl")]
+position = Vector2(224, 397)
+
+[node name="Wall (StaticBody2D)14" parent="Level" unique_id=1473999695 instance=ExtResource("5_lquwl")]
+position = Vector2(144, 349)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)15" parent="Level" unique_id=610683395 instance=ExtResource("5_lquwl")]
+position = Vector2(192, 269)
+
+[node name="Wall (StaticBody2D)19" parent="Level" unique_id=1247760192 instance=ExtResource("5_lquwl")]
+position = Vector2(-62, 269)
+
+[node name="Wall (StaticBody2D)22" parent="Level" unique_id=2087611706 instance=ExtResource("5_lquwl")]
+position = Vector2(-62, -19)
+
+[node name="Wall (StaticBody2D)13" parent="Level" unique_id=1697983544 instance=ExtResource("5_lquwl")]
+position = Vector2(18, 317)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)11" parent="Level" unique_id=2081543389 instance=ExtResource("5_lquwl")]
+position = Vector2(18, 445)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)16" parent="Level" unique_id=996955483 instance=ExtResource("2_0xm2m")]
+position = Vector2(129, 621)
+rotation = -3.1415925
+
+[node name="Wall (StaticBody2D)17" parent="Level" unique_id=925869861 instance=ExtResource("2_0xm2m")]
+position = Vector2(161, 493)
+rotation = -3.1415925
+
+[node name="Wall (StaticBody2D)18" parent="Level" unique_id=2099668738 instance=ExtResource("5_lquwl")]
+position = Vector2(424, 413)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)26" parent="Level" unique_id=274449867 instance=ExtResource("5_lquwl")]
+position = Vector2(728, 333)
+
+[node name="TextureRect" type="TextureRect" parent="Level" unique_id=154785832]
+z_index = -10
+offset_left = -125.0
+offset_top = -35.0
+offset_right = 791.0
+offset_bottom = 1023.0
+texture = ExtResource("6_7mycd")
+expand_mode = 1
+stretch_mode = 1
