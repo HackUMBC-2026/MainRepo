@@ -6,13 +6,14 @@ enum State { IDLE, PURSUE, CAST, RECOVER }
 enum Attack { SLAM, CLEAVE, BARRAGE }
 
 @export_group("Boss")
-@export var boss_name: String = "Ash Warden"
+@export var boss_name: String = "Floral Suiter"
 @export var engage_range: float = 280.0
 @export var disengage_range: float = 650.0
 @export var disengage_seconds: float = 3.0
 @export var cast_range: float = 190.0
 @export var attack_pause: float = 1.2
 @export var recovery_seconds: float = 0.55
+@export var idle_tint: Color = Color(1.0, 0.5, 0.3)
 @export_flags_2d_physics var sight_collision_mask: int = 1
 
 @export_group("Circle Slam")
@@ -39,6 +40,7 @@ enum Attack { SLAM, CLEAVE, BARRAGE }
 var state: State = State.IDLE
 var is_engaged: bool = false
 var cast_name: String = ""
+var cast_parryable: bool = false
 var cast_age: float = 0.0
 var cast_duration: float = 1.0
 var current_attack: Attack = Attack.SLAM
@@ -103,17 +105,13 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			move_and_slide()
 			cast_age += delta
-			if current_attack == Attack.BARRAGE:
-				while (
-					barrage_placed < barrage_count
-					and cast_age >= barrage_placed * maxf(barrage_interval, 0.05)
-				):
-					place_barrage_mark()
+			advance_cast()
 			if cast_age >= cast_duration:
 				state = State.RECOVER
 				cast_name = ""
+				cast_parryable = false
 				recovery_left = recovery_seconds
-				boss_sprite.modulate = Color(1.0, 0.5, 0.3)
+				boss_sprite.modulate = idle_tint
 		State.RECOVER:
 			velocity = Vector2.ZERO
 			move_and_slide()
@@ -121,6 +119,15 @@ func _physics_process(delta: float) -> void:
 			if recovery_left <= 0.0:
 				state = State.PURSUE
 				cooldown_left = attack_pause
+
+
+func advance_cast() -> void:
+	if current_attack == Attack.BARRAGE:
+		while (
+			barrage_placed < barrage_count
+			and cast_age >= barrage_placed * maxf(barrage_interval, 0.05)
+		):
+			place_barrage_mark()
 
 
 func engage() -> void:
@@ -134,6 +141,7 @@ func end_encounter() -> void:
 	is_engaged = false
 	state = State.IDLE
 	cast_name = ""
+	cast_parryable = false
 	velocity = Vector2.ZERO
 	cancel_telegraphs()
 
@@ -174,6 +182,7 @@ func begin_cast() -> void:
 	state = State.CAST
 	velocity = Vector2.ZERO
 	cast_age = 0.0
+	cast_parryable = false
 	current_attack = next_attack
 	boss_sprite.modulate = Color(1.0, 0.8, 0.45)
 	match current_attack:
@@ -244,9 +253,10 @@ func stun(duration: float) -> void:
 		return
 	cancel_telegraphs()
 	cast_name = ""
+	cast_parryable = false
 	state = State.RECOVER if is_engaged else State.IDLE
 	recovery_left = recovery_seconds
-	boss_sprite.modulate = Color(1.0, 0.5, 0.3)
+	boss_sprite.modulate = idle_tint
 
 
 func take_damage(amount: float) -> void:

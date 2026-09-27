@@ -8,6 +8,7 @@ var radius: float = 80.0
 var cone_angle: float = 100.0
 var warning_seconds: float = 1.1
 var damage: float = 20.0
+var parryable: bool = false
 var attacker: Enemy
 var target: Player
 var obstruction_mask: int = 1
@@ -38,8 +39,16 @@ func _physics_process(delta: float) -> void:
 		if age >= maxf(warning_seconds, 0.05):
 			detonated = true
 			if contains_player() and clear_line_to_player():
-				# Unblockable and unparryable; the player must leave the marked area.
-				target.receive_attack(damage, attacker, false)
+				apply_hit()
+	update_visuals()
+
+
+func apply_hit() -> void:
+	# Selected directed attacks use the sword's normal guard/parry handling.
+	target.receive_attack(damage, attacker, parryable)
+
+
+func update_visuals() -> void:
 	queue_redraw()
 
 

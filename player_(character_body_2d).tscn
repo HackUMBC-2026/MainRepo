@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bmdne02si86pb" path="res://assets/sword_best_3.png" id="3_rkocr"]
 [ext_resource type="Script" uid="uid://ykw1up3guwnk" path="res://player/sword_hilt_fire.gd" id="5_hilt_fire"]
 [ext_resource type="Script" uid="uid://dxu1sxqgwss2d" path="res://player/movement_fire.gd" id="6_movement_fire"]
+[ext_resource type="Script" uid="uid://drwii7fpattux" path="res://player/special_attacks.gd" id="7_specials"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7imt7"]
 radius = 12.0
@@ -31,10 +32,13 @@ bg_color = Color(1, 1, 1, 1)
 motion_mode = 1
 script = ExtResource("1_duqy3")
 
+[node name="SpecialAttacks" type="Node2D" parent="." unique_id=1982619729]
+script = ExtResource("7_specials")
+
 [node name="MovementFire" type="Node2D" parent="." unique_id=1475791489]
+texture_filter = 1
 position = Vector2(0, -9.65)
 script = ExtResource("6_movement_fire")
-jet_offset = Vector2(0, -9.65)
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2123167774]
 position = Vector2(1.9073486e-06, 0)

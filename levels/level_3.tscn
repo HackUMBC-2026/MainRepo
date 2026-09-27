@@ -1,0 +1,549 @@
+[gd_scene format=3 uid="uid://cgngvqwg3qb7a"]
+
+[ext_resource type="PackedScene" uid="uid://bjfq3e644vrvt" path="res://player_(character_body_2d).tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://co8tosrm4fmp7" path="res://enemies/telegraph_boss.tscn" id="2_boss"]
+[ext_resource type="Texture2D" uid="uid://gfck2hay2gyj" path="res://assets/floor_tile_fancy.png" id="3_lsnkt"]
+[ext_resource type="PackedScene" path="res://levels/stairs.tscn" id="3_stairs"]
+[ext_resource type="Texture2D" uid="uid://bp04dkgttcu83" path="res://assets/nice_wall_1.png" id="4_s3q8p"]
+[ext_resource type="Script" uid="uid://dfs3wj51iwun" path="res://player/stamina_bar_(progress_bar).gd" id="4_stamina"]
+[ext_resource type="Texture2D" uid="uid://cecsnujnwrklt" path="res://assets/bottom_pillar_FIXED.png" id="4_wj73x"]
+[ext_resource type="Script" uid="uid://dowwp2dvl2tys" path="res://player/health_bar_(progress_bar).gd" id="5_health"]
+[ext_resource type="Script" uid="uid://vb6o3bb3xaep" path="res://levels/throne_room_art.gd" id="6_art"]
+[ext_resource type="Texture2D" uid="uid://dm3f7nbwoyg1j" path="res://assets/throne_prototype_ug.png" id="6_u4kh1"]
+[ext_resource type="Script" uid="uid://b3g3pc10kqjko" path="res://levels/throne_room.gd" id="7_level"]
+[ext_resource type="Script" uid="uid://dj4wtw6qkyx87" path="res://enemies/holy_boss.gd" id="8_holy_boss"]
+[ext_resource type="Texture2D" uid="uid://bs8vxqlxckr17" path="res://assets/lame_staris_upward.png" id="8_svivd"]
+[ext_resource type="Texture2D" uid="uid://cwmv7j55y231t" path="res://assets/King.png" id="9_jq78i"]
+[ext_resource type="Texture2D" uid="uid://c02tw36psedhr" path="res://assets/stained_glass_red_loveee.png" id="15_yafm2"]
+
+[sub_resource type="RectangleShape2D" id="Shape_horizontal_wall"]
+size = Vector2(768, 32)
+
+[sub_resource type="RectangleShape2D" id="Shape_vertical_wall"]
+size = Vector2(32, 896)
+
+[sub_resource type="CircleShape2D" id="Shape_column"]
+radius = 30.0
+
+[sub_resource type="RectangleShape2D" id="Shape_throne"]
+size = Vector2(80, 72)
+
+[node name="Level3" type="Node2D" unique_id=872819686 node_paths=PackedStringArray("final_boss")]
+script = ExtResource("7_level")
+final_boss = NodePath("FinalBoss")
+
+[node name="Ground" type="Node2D" parent="." unique_id=1894101238]
+
+[node name="Floor" type="Node2D" parent="Ground" unique_id=1102049841]
+z_index = -10
+texture_filter = 1
+position = Vector2(384, 480)
+script = ExtResource("6_art")
+texture = ExtResource("3_lsnkt")
+art_size = Vector2(768, 960)
+tile_texture = true
+placeholder_color = Color(0.16, 0.17, 0.21, 1)
+
+[node name="CentralCarpet" type="Node2D" parent="Ground" unique_id=244627112]
+z_index = -9
+texture_filter = 1
+position = Vector2(384, 568)
+script = ExtResource("6_art")
+art_size = Vector2(176, 672)
+tile_texture = true
+placeholder_color = Color(0.32, 0.055, 0.09, 1)
+
+[node name="DaisLowerStep" type="Node2D" parent="Ground" unique_id=669857293]
+z_index = -8
+texture_filter = 1
+position = Vector2(384, 152)
+script = ExtResource("6_art")
+art_size = Vector2(416, 208)
+placeholder_color = Color(0.26, 0.26, 0.3, 1)
+
+[node name="DaisMiddleStep" type="Node2D" parent="Ground" unique_id=1642136144]
+z_index = -7
+texture_filter = 1
+position = Vector2(384, 144)
+script = ExtResource("6_art")
+art_size = Vector2(384, 176)
+placeholder_color = Color(0.3, 0.3, 0.34, 1)
+
+[node name="ThronePlatform" type="Node2D" parent="Ground" unique_id=938689623]
+z_index = -6
+texture_filter = 1
+position = Vector2(384, 136)
+script = ExtResource("6_art")
+art_size = Vector2(352, 144)
+placeholder_color = Color(0.34, 0.34, 0.38, 1)
+
+[node name="Architecture" type="Node2D" parent="." unique_id=878517171]
+
+[node name="NorthWall" type="StaticBody2D" parent="Architecture" unique_id=178504078]
+position = Vector2(384, 16)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/NorthWall" unique_id=1783428973]
+shape = SubResource("Shape_horizontal_wall")
+
+[node name="Art" type="Node2D" parent="Architecture/NorthWall" unique_id=902266636]
+texture_filter = 1
+script = ExtResource("6_art")
+art_size = Vector2(768, 32)
+placeholder_color = Color(0.1, 0.11, 0.15, 1)
+
+[node name="TextureRect" type="TextureRect" parent="Architecture/NorthWall/Art" unique_id=1371936412]
+offset_left = -383.0
+offset_top = -32.0
+offset_right = 383.0
+offset_bottom = 33.0
+offset_transform_enabled = true
+offset_transform_scale = Vector2(1, 0.5)
+texture = ExtResource("4_s3q8p")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="SouthWall" type="StaticBody2D" parent="Architecture" unique_id=379280538]
+position = Vector2(384, 944)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/SouthWall" unique_id=1033787526]
+shape = SubResource("Shape_horizontal_wall")
+
+[node name="Art" type="Node2D" parent="Architecture/SouthWall" unique_id=1714308123]
+texture_filter = 1
+script = ExtResource("6_art")
+art_size = Vector2(768, 32)
+placeholder_color = Color(0.1, 0.11, 0.15, 1)
+
+[node name="WestWall" type="StaticBody2D" parent="Architecture" unique_id=1337090457]
+position = Vector2(16, 480)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/WestWall" unique_id=362525740]
+shape = SubResource("Shape_vertical_wall")
+
+[node name="Art" type="Node2D" parent="Architecture/WestWall" unique_id=596392901]
+texture_filter = 1
+script = ExtResource("6_art")
+art_size = Vector2(32, 896)
+placeholder_color = Color(0.1, 0.11, 0.15, 1)
+
+[node name="EastWall" type="StaticBody2D" parent="Architecture" unique_id=1912034774]
+position = Vector2(752, 480)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/EastWall" unique_id=704804575]
+shape = SubResource("Shape_vertical_wall")
+
+[node name="Art" type="Node2D" parent="Architecture/EastWall" unique_id=431577099]
+texture_filter = 1
+script = ExtResource("6_art")
+art_size = Vector2(32, 896)
+placeholder_color = Color(0.1, 0.11, 0.15, 1)
+
+[node name="LeftColumnNorth" type="StaticBody2D" parent="Architecture" unique_id=1948347020]
+position = Vector2(136, 352)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/LeftColumnNorth" unique_id=1099149154]
+shape = SubResource("Shape_column")
+
+[node name="Art" type="Node2D" parent="Architecture/LeftColumnNorth" unique_id=1874098922]
+texture_filter = 1
+position = Vector2(0, -52.13)
+scale = Vector2(2.25, 2.25)
+script = ExtResource("6_art")
+texture = ExtResource("4_wj73x")
+placeholder = 1
+placeholder_color = Color(0.32, 0.33, 0.38, 1)
+
+[node name="RightColumnNorth" type="StaticBody2D" parent="Architecture" unique_id=1460922583]
+position = Vector2(632, 352)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/RightColumnNorth" unique_id=27566362]
+shape = SubResource("Shape_column")
+
+[node name="Art" type="Node2D" parent="Architecture/RightColumnNorth" unique_id=1148623991]
+texture_filter = 1
+position = Vector2(0, -52.13)
+scale = Vector2(2.25, 2.25)
+script = ExtResource("6_art")
+texture = ExtResource("4_wj73x")
+placeholder = 1
+placeholder_color = Color(0.32, 0.33, 0.38, 1)
+
+[node name="LeftColumnMiddle" type="StaticBody2D" parent="Architecture" unique_id=1272888758]
+position = Vector2(136, 568)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/LeftColumnMiddle" unique_id=338360501]
+shape = SubResource("Shape_column")
+
+[node name="Art" type="Node2D" parent="Architecture/LeftColumnMiddle" unique_id=870864123]
+texture_filter = 1
+position = Vector2(1.595, -52.13)
+scale = Vector2(2.25, 2.25)
+script = ExtResource("6_art")
+texture = ExtResource("4_wj73x")
+placeholder = 1
+placeholder_color = Color(0.32, 0.33, 0.38, 1)
+
+[node name="RightColumnMiddle" type="StaticBody2D" parent="Architecture" unique_id=1414172560]
+position = Vector2(632, 568)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/RightColumnMiddle" unique_id=1208412330]
+shape = SubResource("Shape_column")
+
+[node name="Art" type="Node2D" parent="Architecture/RightColumnMiddle" unique_id=805913014]
+texture_filter = 1
+position = Vector2(0, -52.13)
+scale = Vector2(2.25, 2.25)
+script = ExtResource("6_art")
+texture = ExtResource("4_wj73x")
+placeholder = 1
+placeholder_color = Color(0.32, 0.33, 0.38, 1)
+
+[node name="LeftColumnSouth" type="StaticBody2D" parent="Architecture" unique_id=838630020]
+position = Vector2(136, 776)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/LeftColumnSouth" unique_id=1282436730]
+shape = SubResource("Shape_column")
+
+[node name="Art" type="Node2D" parent="Architecture/LeftColumnSouth" unique_id=1295292403]
+texture_filter = 1
+position = Vector2(0, -52.13)
+scale = Vector2(2.25, 2.25)
+script = ExtResource("6_art")
+texture = ExtResource("4_wj73x")
+placeholder = 1
+placeholder_color = Color(0.32, 0.33, 0.38, 1)
+
+[node name="RightColumnSouth" type="StaticBody2D" parent="Architecture" unique_id=725518776]
+position = Vector2(632, 776)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/RightColumnSouth" unique_id=2082696591]
+shape = SubResource("Shape_column")
+
+[node name="Art" type="Node2D" parent="Architecture/RightColumnSouth" unique_id=1869186990]
+texture_filter = 1
+position = Vector2(0, -52.13)
+scale = Vector2(2.25, 2.25)
+script = ExtResource("6_art")
+texture = ExtResource("4_wj73x")
+placeholder = 1
+placeholder_color = Color(0.32, 0.33, 0.38, 1)
+
+[node name="Throne" type="StaticBody2D" parent="Architecture" unique_id=1875800468]
+position = Vector2(384, 124)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Architecture/Throne" unique_id=1733435659]
+shape = SubResource("Shape_throne")
+
+[node name="Art" type="Node2D" parent="Architecture/Throne" unique_id=1443629271]
+texture_filter = 1
+rotation = -1.5707964
+script = ExtResource("6_art")
+texture = ExtResource("6_u4kh1")
+art_size = Vector2(96, 112)
+art_offset = Vector2(1.315, 0.25)
+placeholder = 2
+placeholder_color = Color(0.22, 0.18, 0.16, 1)
+
+[node name="Decorations" type="Node2D" parent="." unique_id=1470963484]
+
+[node name="LeftRoyalBanner" type="Node2D" parent="Decorations" unique_id=656954557]
+z_index = -3
+texture_filter = 1
+position = Vector2(232, 104)
+script = ExtResource("6_art")
+art_size = Vector2(32, 72)
+placeholder = 3
+placeholder_color = Color(0.42, 0.065, 0.11, 1)
+
+[node name="RightRoyalBanner" type="Node2D" parent="Decorations" unique_id=1747557815]
+z_index = -3
+texture_filter = 1
+position = Vector2(536, 104)
+script = ExtResource("6_art")
+art_size = Vector2(32, 72)
+placeholder = 3
+placeholder_color = Color(0.42, 0.065, 0.11, 1)
+
+[node name="LeftBannerNorth" type="Node2D" parent="Decorations" unique_id=1357095100]
+z_index = -3
+texture_filter = 1
+position = Vector2(64, 448)
+script = ExtResource("6_art")
+art_size = Vector2(24, 64)
+placeholder = 3
+placeholder_color = Color(0.32, 0.055, 0.09, 1)
+
+[node name="LeftBannerSouth" type="Node2D" parent="Decorations" unique_id=1887137011]
+z_index = -3
+texture_filter = 1
+position = Vector2(64, 664)
+script = ExtResource("6_art")
+art_size = Vector2(24, 64)
+placeholder = 3
+placeholder_color = Color(0.32, 0.055, 0.09, 1)
+
+[node name="RightBannerNorth" type="Node2D" parent="Decorations" unique_id=216984268]
+z_index = -3
+texture_filter = 1
+position = Vector2(704, 448)
+script = ExtResource("6_art")
+art_size = Vector2(24, 64)
+placeholder = 3
+placeholder_color = Color(0.32, 0.055, 0.09, 1)
+
+[node name="RightBannerSouth" type="Node2D" parent="Decorations" unique_id=1199095450]
+z_index = -3
+texture_filter = 1
+position = Vector2(704, 664)
+script = ExtResource("6_art")
+art_size = Vector2(24, 64)
+placeholder = 3
+placeholder_color = Color(0.32, 0.055, 0.09, 1)
+
+[node name="ReturnStairs" parent="." unique_id=1838880623 instance=ExtResource("3_stairs")]
+position = Vector2(64, 895)
+rotation = -1.5707964
+next_level = "res://levels/level_2.tscn"
+stairs_texture = ExtResource("8_svivd")
+
+[node name="Player" parent="." unique_id=1372277445 instance=ExtResource("1_player")]
+position = Vector2(384, 844)
+scale = Vector2(0.64, 0.64)
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1810207485]
+layer = 11
+
+[node name="StaminaBar" type="ProgressBar" parent="HUD" unique_id=2058206069 node_paths=PackedStringArray("player")]
+offset_left = 16.0
+offset_top = 7.0
+offset_right = 150.0
+offset_bottom = 34.0
+mouse_filter = 2
+max_value = 240.0
+script = ExtResource("4_stamina")
+player = NodePath("../../Player")
+
+[node name="HealthBar" type="ProgressBar" parent="HUD" unique_id=749782006 node_paths=PackedStringArray("player")]
+offset_left = 15.0
+offset_top = 39.0
+offset_right = 149.0
+offset_bottom = 66.0
+mouse_filter = 2
+script = ExtResource("5_health")
+player = NodePath("../../Player")
+
+[node name="Completion" type="Label" parent="HUD" unique_id=1771902771]
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -64.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.85, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.025, 0.025, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 20
+text = "THRONE CLAIMED
+Final level complete"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FinalBoss" parent="." unique_id=881062431 instance=ExtResource("2_boss")]
+position = Vector2(384, 320)
+script = ExtResource("8_holy_boss")
+ray_length = 340.0
+ray_half_width = 23.0
+ray_warning = 1.15
+ray_damage = 26.0
+halo_safe_radius = 58.0
+halo_band_width = 45.0
+halo_count = 3
+halo_interval = 0.3
+halo_warning = 1.2
+halo_damage = 22.0
+rain_count = 4
+rain_radius = 42.0
+rain_interval = 0.4
+rain_warning = 1.05
+rain_damage = 18.0
+cross_radius = 165.0
+cross_half_width = 20.0
+cross_warning = 1.3
+cross_damage = 25.0
+lance_count = 5
+lance_arc = 140.0
+lance_length = 260.0
+lance_half_width = 9.0
+lance_warning = 1.3
+lance_damage = 20.0
+shackle_radius = 48.0
+shackle_warning = 1.3
+shackle_duration = 1.5
+shackle_release_grace = 0.4
+boss_name = "Radiant Sovereign"
+engage_range = 300.0
+idle_tint = Color(1, 0.5, 0.3, 1)
+max_health = 180.0
+
+[node name="Sprite2D" parent="FinalBoss" index="0" unique_id=725411597]
+texture = ExtResource("9_jq78i")
+
+[node name="StainedGlassRedLoveee" type="Sprite2D" parent="." unique_id=871935962]
+position = Vector2(23.000002, 380)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee2" type="Sprite2D" parent="." unique_id=1567286737]
+position = Vector2(22, 317)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee3" type="Sprite2D" parent="." unique_id=636380641]
+position = Vector2(23.000002, 253)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee7" type="Sprite2D" parent="." unique_id=1722474148]
+position = Vector2(22.70674, 573.0105)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee8" type="Sprite2D" parent="." unique_id=1317259284]
+position = Vector2(21.706738, 510.01053)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee9" type="Sprite2D" parent="." unique_id=948139825]
+position = Vector2(22.70674, 446.01053)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee10" type="Sprite2D" parent="." unique_id=433456253]
+position = Vector2(22.70674, 767.0105)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee11" type="Sprite2D" parent="." unique_id=1547195492]
+position = Vector2(21.706738, 704.0105)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee12" type="Sprite2D" parent="." unique_id=1469331920]
+position = Vector2(22.70674, 640.0105)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee4" type="Sprite2D" parent="." unique_id=871783714]
+position = Vector2(20.70674, 192.01054)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee5" type="Sprite2D" parent="." unique_id=393005956]
+position = Vector2(19.706738, 129.01054)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee6" type="Sprite2D" parent="." unique_id=1146016526]
+position = Vector2(20.70674, 65.010544)
+rotation = -1.5707964
+scale = Vector2(1.1878289, 0.2720855)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee13" type="Sprite2D" parent="." unique_id=2102908785]
+position = Vector2(748.50653, 376.91776)
+rotation = -1.5707964
+scale = Vector2(1.21651, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee14" type="Sprite2D" parent="." unique_id=247323373]
+position = Vector2(747.50653, 313.91776)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee15" type="Sprite2D" parent="." unique_id=1165203251]
+position = Vector2(748.50653, 249.91776)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee16" type="Sprite2D" parent="." unique_id=1727093624]
+position = Vector2(748.21326, 569.9283)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee17" type="Sprite2D" parent="." unique_id=1834537560]
+position = Vector2(747.21326, 506.92828)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee18" type="Sprite2D" parent="." unique_id=1135781118]
+position = Vector2(748.21326, 442.92828)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee19" type="Sprite2D" parent="." unique_id=1565901860]
+position = Vector2(748.21326, 763.9283)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee20" type="Sprite2D" parent="." unique_id=746807590]
+position = Vector2(747.21326, 700.9283)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee21" type="Sprite2D" parent="." unique_id=216218371]
+position = Vector2(748.21326, 636.9283)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee22" type="Sprite2D" parent="." unique_id=600059819]
+position = Vector2(746.21326, 188.92833)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee23" type="Sprite2D" parent="." unique_id=662802449]
+position = Vector2(745.21326, 125.92834)
+rotation = -1.5707964
+scale = Vector2(1.21651, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[node name="StainedGlassRedLoveee24" type="Sprite2D" parent="." unique_id=532430902]
+position = Vector2(746.21326, 61.928318)
+rotation = -1.5707964
+scale = Vector2(1.2165099, -0.28791457)
+texture = ExtResource("15_yafm2")
+
+[editable path="FinalBoss"]

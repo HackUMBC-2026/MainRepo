@@ -35,13 +35,16 @@ const LEFT_TEXTURE: Texture2D = preload("res://assets/ProfileLeftJoan.png")
 @export var dash_stamina_cost: float = 60.0
 
 @export_group("Visuals")
-# Set to 0 to disable the stretch.
 @export var dash_stretch: float = 0.08
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var sword: Node2D = $"SwordAnchor (Node2D)/Sword (Node2D)"
+@onready var specials: Node2D = $SpecialAttacks
 
 var heavy_attack_locked: bool = false
+var binding_time_left: float = 0.0
+var binding_duration: float = 0.0
+var binding_source: Node
 var invincibility_left: float = 0.0
 var is_sprinting: bool = false
 var is_dashing: bool = false
@@ -81,6 +84,7 @@ func take_damage(amount: float) -> void:
 		is_dashing = false
 		dash_movement_lock_time = 0.0
 		heavy_attack_locked = false
+		clear_holy_binding()
 		died.emit()
 		set_physics_process(false)
 		return
@@ -109,6 +113,29 @@ func receive_attack(
 
 
 func _physics_process(delta: float) -> void:
+	if specials.tick(delta):
+		update_sprite_stretch(delta)
+		return
+	if binding_time_left > 0.0:
+		if not is_instance_valid(binding_source) or binding_source.is_queued_for_deletion():
+			clear_holy_binding()
+		else:
+			binding_time_left = maxf(binding_time_left - delta, 0.0)
+			if binding_time_left <= 0.0:
+				clear_holy_binding()
+			else:
+				velocity = Vector2.ZERO
+				is_sprinting = false
+				is_dashing = false
+				dash_movement_lock_time = 0.0
+				_dash_buffer_left = 0.0
+				_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
+				stamina = clampf(stamina, 0.0, C_MAX_STAMINA)
+				update_stamina(Vector2.ZERO, delta)
+				update_facing(Input.get_vector("move_left", "move_right", "move_up", "move_down"))
+				update_sprite_stretch(delta)
+				queue_redraw()
+				return
 	if heavy_attack_locked:
 		velocity = Vector2.ZERO
 		is_sprinting = false
@@ -128,7 +155,6 @@ func _physics_process(delta: float) -> void:
 	_dash_buffer_left = maxf(_dash_buffer_left - delta, 0.0)
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
 
-	# Remember a press briefly, including presses during a dash.
 	if Input.is_action_just_pressed("dash"):
 		_dash_buffer_left = maxf(dash_buffer_time, delta)
 
@@ -194,7 +220,6 @@ func process_normal_movement(direction: Vector2, delta: float) -> void:
 		rate = sprint_speed / maxf(stopping_time, 0.001)
 
 	if direction != Vector2.ZERO:
-		# Smooth the speed, but turn immediately.
 		var new_speed := move_toward(
 			current_speed,
 			target_speed,
@@ -233,7 +258,6 @@ func process_dash(direction: Vector2, delta: float) -> void:
 		1.0
 	)
 
-	# Starts fast, then drops toward ordinary movement speed.
 	var curve := 1.0 - 0.3 * progress - 0.7 * pow(progress, 7.0)
 	var speed := lerpf(normal_speed(), C_DASH_SPEED, curve)
 
@@ -249,13 +273,56 @@ func process_dash(direction: Vector2, delta: float) -> void:
 		is_dashing = false
 		_dash_cooldown_left = maxf(dash_cooldown, 0.0)
 
-		# Hand control straight back to the held movement input.
 		velocity = direction * normal_speed()
 		update_facing(direction)
 
 
 func isMovementLocked() -> bool:
-	return is_dashing
+	return is_dashing or binding_time_left > 0.0
+
+
+func apply_holy_binding(duration: float, source: Node) -> void:
+	if health <= 0.0 or duration <= 0.0 or not is_instance_valid(source):
+		return
+	binding_source = source
+	binding_duration = duration
+	binding_time_left = duration
+	velocity = Vector2.ZERO
+	is_sprinting = false
+	is_dashing = false
+	dash_movement_lock_time = 0.0
+	_dash_buffer_left = 0.0
+	queue_redraw()
+
+
+func clear_holy_binding(source: Node = null) -> void:
+	if source != null and binding_source != source:
+		return
+	binding_time_left = 0.0
+	binding_duration = 0.0
+	binding_source = null
+	queue_redraw()
+
+
+func _draw() -> void:
+	if binding_time_left <= 0.0:
+		return
+	var center := Vector2(0.0, 8.0)
+	var gold := Color(1.0, 0.8, 0.3)
+	var remaining := clampf(binding_time_left / maxf(binding_duration, 0.001), 0.0, 1.0)
+	draw_circle(center, 28.0, Color(gold, 0.12))
+	draw_arc(center, 28.0, 0.0, TAU, 48, Color(gold, 0.5), 1.5)
+	draw_arc(center, 32.0, -PI * 0.5, -PI * 0.5 + TAU * remaining, 48, gold, 2.5)
+	for index in range(4):
+		var direction := Vector2.RIGHT.rotated(PI * 0.25 + float(index) * PI * 0.5)
+		var across := direction.orthogonal()
+		for link in range(4):
+			var link_center := center + direction * (9.0 + float(link) * 6.0)
+			draw_polyline(PackedVector2Array([
+				link_center - direction * 4.0, link_center + across * 2.0,
+				link_center + direction * 4.0, link_center - across * 2.0,
+				link_center - direction * 4.0,
+			]), gold, 1.5)
 
 
 func facing_direction() -> Vector2:

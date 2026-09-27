@@ -17,5 +17,6 @@ func _process(_delta: float) -> void:
 	health_bar.value = boss.health
 	var casting: bool = not boss.cast_name.is_empty()
 	cast_bar.visible = casting
-	cast_label.text = "%s  —  DODGE" % boss.cast_name if casting else ""
+	var defense_hint := "PARRY OR DODGE" if boss.cast_parryable else "DODGE"
+	cast_label.text = "%s  —  %s" % [boss.cast_name, defense_hint] if casting else ""
 	cast_bar.value = clampf(boss.cast_age / maxf(boss.cast_duration, 0.05), 0.0, 1.0)

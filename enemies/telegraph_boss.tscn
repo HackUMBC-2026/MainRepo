@@ -1,8 +1,9 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://co8tosrm4fmp7"]
 
-[ext_resource type="PackedScene" path="res://enemies/basic_enemy_(character_body_2d).tscn" id="1_base"]
-[ext_resource type="Script" path="res://enemies/telegraph_boss.gd" id="2_boss"]
-[ext_resource type="Script" path="res://enemies/boss_hud.gd" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://bofmu1do1uvdi" path="res://enemies/basic_enemy_(character_body_2d).tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://cqn017ruoiohm" path="res://enemies/telegraph_boss.gd" id="2_boss"]
+[ext_resource type="Texture2D" uid="uid://crt2h5mi58k2u" path="res://assets/Suitor.png" id="3_7iusb"]
+[ext_resource type="Script" uid="uid://ba2shoih23y01" path="res://enemies/boss_hud.gd" id="3_hud"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 26.0
@@ -21,31 +22,52 @@ bg_color = Color(0.85, 0.12, 0.1, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cast"]
 bg_color = Color(1, 0.6, 0.1, 1)
 
-[node name="TelegraphBoss" instance=ExtResource("1_base")]
+[node name="TelegraphBoss" unique_id=635233187 instance=ExtResource("1_base")]
 script = ExtResource("2_boss")
+boss_name = "Ash Warden"
+engage_range = 280.0
+disengage_range = 650.0
+disengage_seconds = 3.0
+cast_range = 190.0
+attack_pause = 1.2
+recovery_seconds = 0.55
+sight_collision_mask = 1
+slam_radius = 105.0
+slam_warning = 1.15
+slam_damage = 25.0
+cleave_radius = 190.0
+cleave_angle = 100.0
+cleave_warning = 1.0
+cleave_damage = 22.0
+barrage_radius = 43.0
+barrage_warning = 1.1
+barrage_damage = 18.0
+barrage_count = 3
+barrage_interval = 0.4
 move_speed = 65.0
 max_health = 120.0
 stop_distance = 90.0
 show_health_bar = false
 
-[node name="Sprite2D" parent="." index="0"]
+[node name="Sprite2D" parent="." index="0" unique_id=725411597]
 modulate = Color(1, 0.5, 0.3, 1)
 scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_7iusb")
 
-[node name="CollisionShape2D" parent="." index="1"]
+[node name="CollisionShape2D" parent="." index="1" unique_id=1303614143]
 shape = SubResource("CircleShape2D_body")
 
-[node name="FacingIndicator" type="Node2D" parent="."]
+[node name="FacingIndicator" type="Node2D" parent="." index="4" unique_id=885334569]
 
-[node name="Arrow" type="Polygon2D" parent="FacingIndicator"]
+[node name="Arrow" type="Polygon2D" parent="FacingIndicator" index="0" unique_id=213302352]
 color = Color(1, 0.75, 0.25, 1)
 polygon = PackedVector2Array(25, -6, 36, 0, 25, 6)
 
-[node name="BossHUD" type="CanvasLayer" parent="."]
+[node name="BossHUD" type="CanvasLayer" parent="." index="5" unique_id=2056316498]
 layer = 10
 script = ExtResource("3_hud")
 
-[node name="Root" type="Control" parent="BossHUD"]
+[node name="Root" type="Control" parent="BossHUD" index="0" unique_id=950925039]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -54,20 +76,19 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Panel" type="Control" parent="BossHUD/Root"]
+[node name="Panel" type="Control" parent="BossHUD/Root" index="0" unique_id=57144436]
 visible = false
-layout_mode = 0
+anchors_preset = 0
 anchor_left = 0.27
 anchor_right = 0.98
 offset_top = 7.0
 offset_bottom = 68.0
 mouse_filter = 2
 
-[node name="BossName" type="Label" parent="BossHUD/Root/Panel"]
+[node name="BossName" type="Label" parent="BossHUD/Root/Panel" index="0" unique_id=1290857790]
 layout_mode = 0
 anchor_right = 1.0
 offset_bottom = 19.0
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.87, 0.64, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
@@ -76,7 +97,7 @@ theme_override_font_sizes/font_size = 14
 text = "Ash Warden"
 horizontal_alignment = 1
 
-[node name="Health" type="ProgressBar" parent="BossHUD/Root/Panel"]
+[node name="Health" type="ProgressBar" parent="BossHUD/Root/Panel" index="1" unique_id=1730414271]
 layout_mode = 0
 anchor_right = 1.0
 offset_top = 21.0
@@ -85,16 +106,15 @@ mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_background")
 theme_override_styles/fill = SubResource("StyleBoxFlat_health")
 max_value = 120.0
-value = 120.0
 step = 0.0
+value = 120.0
 show_percentage = false
 
-[node name="CastName" type="Label" parent="BossHUD/Root/Panel"]
+[node name="CastName" type="Label" parent="BossHUD/Root/Panel" index="2" unique_id=1840417797]
 layout_mode = 0
 anchor_right = 1.0
 offset_top = 36.0
 offset_bottom = 51.0
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.75, 0.3, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
@@ -102,7 +122,7 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1
 
-[node name="CastProgress" type="ProgressBar" parent="BossHUD/Root/Panel"]
+[node name="CastProgress" type="ProgressBar" parent="BossHUD/Root/Panel" index="3" unique_id=981170015]
 visible = false
 layout_mode = 0
 anchor_right = 1.0

@@ -11,12 +11,14 @@
 [ext_resource type="PackedScene" uid="uid://tjnwlodpdgw0" path="res://levels/basic_wall_2.tscn" id="9_vm7no"]
 [ext_resource type="PackedScene" uid="uid://ojhyhs3q17pk" path="res://levels/Bookshelf.tscn" id="10_sd18g"]
 [ext_resource type="PackedScene" uid="uid://co4j0xm306ml" path="res://levels/Window1.tscn" id="11_hbb88"]
-[ext_resource type="PackedScene" path="res://enemies/telegraph_boss.tscn" id="11_vm7no"]
+[ext_resource type="PackedScene" uid="uid://co8tosrm4fmp7" path="res://enemies/telegraph_boss.tscn" id="11_vm7no"]
+[ext_resource type="Script" uid="uid://dbx76w3glbhkp" path="res://enemies/flower_boss.gd" id="12_flower_boss"]
 
 [node name="Level2" type="Node2D" unique_id=1698066715]
 
 [node name="Player (CharacterBody2D)" parent="." unique_id=807877464 instance=ExtResource("1_player")]
 position = Vector2(119, 411)
+scale = Vector2(0.64, 0.64)
 
 [node name="HUD (CanvasLayer)" type="CanvasLayer" parent="." unique_id=493117320]
 
@@ -56,6 +58,11 @@ stretch_mode = 1
 position = Vector2(72, 415)
 next_level = "res://main.tscn"
 stairs_texture = ExtResource("6_at1ld")
+
+[node name="StairsToLevel3" parent="Level" unique_id=718245719 instance=ExtResource("6_stairs")]
+position = Vector2(48, -170)
+next_level = "res://levels/level_3.tscn"
+require_clear_level = true
 
 [node name="Wall (StaticBody2D)" parent="Level" unique_id=1469273161 instance=ExtResource("7_at1ld")]
 position = Vector2(227, 162)
@@ -141,12 +148,6 @@ position = Vector2(141, 7)
 [node name="Wall (StaticBody2D)26" parent="Level" unique_id=1173770467 instance=ExtResource("10_sd18g")]
 position = Vector2(55, 7)
 
-[node name="Wall (StaticBody2D)27" parent="Level" unique_id=1695919122 instance=ExtResource("10_sd18g")]
-position = Vector2(55, -89)
-
-[node name="Wall (StaticBody2D)28" parent="Level" unique_id=1079664930 instance=ExtResource("10_sd18g")]
-position = Vector2(141, -89)
-
 [node name="Wall (StaticBody2D)29" parent="Level" unique_id=1557421739 instance=ExtResource("10_sd18g")]
 position = Vector2(637, 287)
 
@@ -190,25 +191,37 @@ scale = Vector2(0.935, 0.335)
 position = Vector2(542, -203.99998)
 scale = Vector2(0.935, 0.335)
 
+[node name="LameStarisUpward" type="Sprite2D" parent="Level" unique_id=1293959214]
+position = Vector2(62, -158)
+rotation = 3.1415927
+texture = ExtResource("6_at1ld")
+
 [node name="TelegraphBoss" parent="." unique_id=527390136 instance=ExtResource("11_vm7no")]
 position = Vector2(382, -103)
-boss_name = "Ash Warden"
-engage_range = 280.0
-disengage_range = 650.0
-disengage_seconds = 3.0
-cast_range = 190.0
-attack_pause = 1.2
-recovery_seconds = 0.55
-sight_collision_mask = 1
-slam_radius = 105.0
-slam_warning = 1.15
-slam_damage = 25.0
-cleave_radius = 190.0
-cleave_angle = 100.0
-cleave_warning = 1.0
-cleave_damage = 22.0
-barrage_radius = 43.0
-barrage_warning = 1.1
-barrage_damage = 18.0
-barrage_count = 3
-barrage_interval = 0.4
+script = ExtResource("12_flower_boss")
+orange = Color(1, 0.43, 0.08, 1)
+blue = Color(0.12, 0.58, 1, 1)
+purple = Color(0.64, 0.22, 1, 1)
+bloom_outer_radius = 145.0
+bloom_safe_radius = 72.0
+bloom_warning = 1.25
+bloom_damage = 25.0
+petal_count = 6
+petal_length = 210.0
+petal_half_width = 36.0
+petal_warning = 1.2
+petal_damage = 22.0
+stream_count = 7
+stream_arc = 110.0
+stream_length = 250.0
+stream_half_width = 23.0
+stream_interval = 0.18
+stream_warning = 0.95
+stream_damage = 18.0
+garden_count = 5
+garden_radius = 48.0
+garden_interval = 0.4
+garden_warning = 1.1
+garden_damage = 18.0
+boss_name = "Floral Suiter"
+idle_tint = Color(1, 0.5, 0.3, 1)

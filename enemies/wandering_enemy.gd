@@ -1,6 +1,6 @@
 extends Enemy
 
-enum State { WANDER, CHASE, INVESTIGATE, SEARCH }
+enum State { WANDER, CHASE }
 
 @export_group("Detection")
 @export var auto_find_player: bool = true
@@ -17,13 +17,7 @@ enum State { WANDER, CHASE, INVESTIGATE, SEARCH }
 @export var wander_walk_seconds: float = 2.5
 @export var wander_pause_seconds: float = 0.7
 
-@export_group("Searching")
-@export var investigate_seconds: float = 4.0
-@export var search_seconds: float = 2.5
-@export var search_turn_speed: float = 2.0
-
 @onready var facing_indicator: Node2D = $FacingIndicator
-@onready var enemy_sprite: Sprite2D = $Sprite2D
 
 var state: State = State.WANDER
 var facing: Vector2 = Vector2.DOWN
@@ -32,8 +26,6 @@ var wander_home: Vector2
 var wander_destination: Vector2
 var wander_time_left: float = 0.0
 var wander_pause_left: float = 0.0
-var investigate_left: float = 0.0
-var search_left: float = 0.0
 var target_retry_left: float = 0.0
 var random := RandomNumberGenerator.new()
 
@@ -72,14 +64,8 @@ func _physics_process(delta: float) -> void:
 		update_appearance()
 		return
 
-	var sees_player := can_see_player()
-	if sees_player:
-		last_known_position = target.global_position
+	if state == State.WANDER and can_see_player():
 		state = State.CHASE
-	elif state == State.CHASE:
-		# Capture sight only while visible; never track the player's hidden movements.
-		state = State.INVESTIGATE
-		investigate_left = investigate_seconds
 	if state != State.WANDER and (not is_instance_valid(target) or target.health <= 0.0):
 		resume_wandering()
 
@@ -87,22 +73,11 @@ func _physics_process(delta: float) -> void:
 		State.WANDER:
 			update_wandering(delta)
 		State.CHASE:
+			# Once alerted, track the living player even outside the original vision cone.
+			last_known_position = target.global_position
 			move_toward_point(last_known_position, move_speed, stop_distance, delta)
-			if sees_player and can_see_player():
-				try_start_melee_attack()
-		State.INVESTIGATE:
-			investigate_left = maxf(investigate_left - delta, 0.0)
-			move_toward_point(last_known_position, move_speed, 6.0, delta)
-			if global_position.distance_to(last_known_position) <= 8.0 or investigate_left <= 0.0:
-				state = State.SEARCH
-				search_left = search_seconds
-		State.SEARCH:
-			velocity = Vector2.ZERO
-			move_and_slide()
-			facing = facing.rotated(search_turn_speed * delta)
-			search_left = maxf(search_left - delta, 0.0)
-			if search_left <= 0.0:
-				resume_wandering()
+			# The sweep itself still checks attack range and wall obstruction.
+			try_start_melee_attack()
 	update_appearance()
 
 
@@ -202,13 +177,6 @@ func take_damage(amount: float) -> void:
 
 func update_appearance() -> void:
 	facing_indicator.global_rotation = facing.angle()
-	match state:
-		State.WANDER:
-			enemy_sprite.modulate = Color(0.65, 0.85, 1.0)
-		State.CHASE:
-			enemy_sprite.modulate = Color(1.0, 0.4, 0.3)
-		State.INVESTIGATE, State.SEARCH:
-			enemy_sprite.modulate = Color(1.0, 0.8, 0.35)
 	queue_redraw()
 
 

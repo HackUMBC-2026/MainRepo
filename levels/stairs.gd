@@ -2,6 +2,7 @@
 extends Area2D
 
 @export_file("*.tscn") var next_level: String = ""
+@export var require_clear_level: bool = false
 @export var stairs_texture: Texture2D:
 	set(value):
 		stairs_texture = value
@@ -24,13 +25,28 @@ extends Area2D
 			update_trigger()
 
 var changing_level: bool = false
+var nearby_player: Player
+var gate_check_left: float = 0.0
 
 
 func _ready() -> void:
 	update_appearance()
 	update_trigger()
+	set_physics_process(false)
 	if not Engine.is_editor_hint():
 		body_entered.connect(on_body_entered)
+		body_exited.connect(on_body_exited)
+
+
+func _physics_process(delta: float) -> void:
+	if not is_instance_valid(nearby_player) or nearby_player.health <= 0.0:
+		$LockedHint.hide()
+		set_physics_process(false)
+		return
+	gate_check_left -= delta
+	if gate_check_left <= 0.0:
+		gate_check_left = 0.15
+		try_enter_level()
 
 
 func update_appearance() -> void:
@@ -50,12 +66,50 @@ func update_trigger() -> void:
 
 
 func on_body_entered(body: Node2D) -> void:
-	if not body is Player or changing_level:
+	if not body is Player:
 		return
 	if body.health <= 0.0:
 		return
+	nearby_player = body as Player
+	gate_check_left = 0.15
+	set_physics_process(true)
+	try_enter_level()
+
+
+func on_body_exited(body: Node2D) -> void:
+	if body == nearby_player:
+		nearby_player = null
+		$LockedHint.hide()
+		set_physics_process(false)
+
+
+func living_enemies_remaining() -> int:
+	if not require_clear_level:
+		return 0
+	var level := get_tree().current_scene
+	var remaining := 0
+	for candidate in get_tree().get_nodes_in_group("enemies"):
+		if candidate is Enemy and level.is_ancestor_of(candidate) and candidate.health > 0.0:
+			remaining += 1
+	return remaining
+
+
+func show_locked_hint(remaining: int) -> void:
+	$LockedHint.text = "Defeat all enemies\n%d remaining" % remaining
+	$LockedHint.show()
+
+
+func try_enter_level() -> void:
+	if changing_level or not is_instance_valid(nearby_player) or nearby_player.health <= 0.0:
+		return
+	var remaining := living_enemies_remaining()
+	if remaining > 0:
+		show_locked_hint(remaining)
+		return
+	$LockedHint.hide()
 	if next_level.is_empty():
 		push_warning("Choose a Next Level on this stairs instance in the Inspector.")
+		set_physics_process(false)
 		return
 	changing_level = true
 	change_level.call_deferred()
@@ -63,9 +117,19 @@ func on_body_entered(body: Node2D) -> void:
 
 func change_level() -> void:
 	# Leave the physics callback before replacing the scene and its collision objects.
+	if not is_instance_valid(nearby_player) or nearby_player.health <= 0.0 or not overlaps_body(nearby_player):
+		changing_level = false
+		return
+	# Recheck in case another enemy spawned before the deferred transition.
+	var remaining := living_enemies_remaining()
+	if remaining > 0:
+		changing_level = false
+		show_locked_hint(remaining)
+		return
 	var error := get_tree().change_scene_to_file(next_level)
 	if error != OK:
 		changing_level = false
+		set_physics_process(false)
 		push_error("Stairs could not load '%s': %s" % [next_level, error_string(error)])
 
 

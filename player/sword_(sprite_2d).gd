@@ -247,7 +247,7 @@ func damage_query(
 			var body = result["collider"]
 			if body is Enemy and not body.is_queued_for_deletion() and not damaged.has(body):
 				damaged[body] = true
-				body.take_damage(damage)
+				body.take_damage(damage * player.specials.sword_damage_multiplier())
 				if stun_seconds > 0.0 and body.health > 0.0:
 					body.stun(stun_seconds)
 		if results.size() < 32:
@@ -893,10 +893,13 @@ func trigger_heavy_impact() -> void:
 	get_tree().current_scene.add_child(explosion)
 	explosion.global_position = impact_position
 
+	start_camera_shake()
+
+
+func start_camera_shake() -> void:
 	camera = get_viewport().get_camera_2d()
 
 	if not is_instance_valid(camera):
-		push_warning("Heavy attack cannot shake: no active Camera2D.")
 		return
 
 	if not shake_active:

@@ -9,6 +9,9 @@
 size = Vector2(32, 32)
 
 [node name="Basic Enemy (CharacterBody2D)" type="CharacterBody2D" unique_id=1618300885]
+motion_mode = 1
+platform_floor_layers = 0
+platform_on_leave = 2
 script = ExtResource("1_bpqs8")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=725411597]

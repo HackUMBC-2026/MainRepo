@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://csgyl6gehjqpf"]
+
+[ext_resource type="Texture2D" uid="uid://cyv5agca41je6" path="res://assets/pillar_bottom_texture.png" id="1_yjt17"]
+
+[node name="StaticBody2D" type="StaticBody2D" unique_id=1726068825]
+
+[node name="Polygon2D" type="Polygon2D" parent="." unique_id=1902143786]
+texture = ExtResource("1_yjt17")
+polygon = PackedVector2Array(4, 4, 0, 4, 4, 0, 0, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=727263317]

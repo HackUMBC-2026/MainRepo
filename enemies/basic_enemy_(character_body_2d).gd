@@ -22,9 +22,7 @@ class_name Enemy
 @export_group("Sweep Sword Appearance")
 @export var sword_texture: Texture2D
 @export var sword_display_height: float = 40.0
-# Position of the grip within the texture, measured from its top-left corner (0 to 1).
 @export var sword_texture_pivot: Vector2 = Vector2(0.5, 0.85)
-# Default assumes the blade points up in the texture.
 @export var sword_rotation_degrees: float = 0.0
 
 @onready var melee_sweep = $MeleeSweep
@@ -35,7 +33,13 @@ var stun_left: float = 0.0
 
 
 func _ready() -> void:
+	# Enforce top-down movement even if a level saves old platformer overrides.
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	platform_floor_layers = 0
+	platform_wall_layers = 0
+	platform_on_leave = CharacterBody2D.PLATFORM_ON_LEAVE_DO_NOTHING
 	health = max_health
+	add_to_group("enemies")
 
 
 func _physics_process(delta: float) -> void:

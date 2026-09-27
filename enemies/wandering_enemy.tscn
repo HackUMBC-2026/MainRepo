@@ -1,13 +1,32 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://b3qpg88hdqe2o"]
 
-[ext_resource type="PackedScene" path="res://enemies/basic_enemy_(character_body_2d).tscn" id="1_base"]
-[ext_resource type="Script" path="res://enemies/wandering_enemy.gd" id="2_behavior"]
+[ext_resource type="PackedScene" uid="uid://bofmu1do1uvdi" path="res://enemies/basic_enemy_(character_body_2d).tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://b14cy56wef1x7" path="res://enemies/wandering_enemy.gd" id="2_behavior"]
+[ext_resource type="Texture2D" uid="uid://dw7qf4ed51hj5" path="res://assets/enemy_Sword.png" id="3_b0aeh"]
+[ext_resource type="Texture2D" uid="uid://bg05psuee3a41" path="res://assets/royalGuard_front.png" id="3_b63pk"]
 
-[node name="WanderingEnemy" instance=ExtResource("1_base")]
+[node name="WanderingEnemy" unique_id=611505169 instance=ExtResource("1_base")]
 script = ExtResource("2_behavior")
+auto_find_player = true
+vision_range = 220.0
+vision_angle_degrees = 110.0
+sight_collision_mask = 1
+initial_facing = Vector2(0, 1)
+turn_speed = 8.0
+show_vision_cone = false
+wander_speed = 40.0
+wander_radius = 100.0
+wander_walk_seconds = 2.5
+wander_pause_seconds = 0.7
+sword_texture = ExtResource("3_b0aeh")
 
-[node name="FacingIndicator" type="Node2D" parent="."]
+[node name="Sprite2D" parent="." index="0" unique_id=725411597]
+texture_filter = 1
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_b63pk")
 
-[node name="Arrow" type="Polygon2D" parent="FacingIndicator"]
+[node name="FacingIndicator" type="Node2D" parent="." index="4" unique_id=1425884738]
+
+[node name="Arrow" type="Polygon2D" parent="FacingIndicator" index="0" unique_id=535036236]
 color = Color(1, 0.85, 0.35, 1)
 polygon = PackedVector2Array(12, -4, 20, 0, 12, 4)
