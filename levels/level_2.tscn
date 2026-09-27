@@ -1,0 +1,214 @@
+[gd_scene format=3 uid="uid://y4psj8n7in4y"]
+
+[ext_resource type="PackedScene" uid="uid://bjfq3e644vrvt" path="res://player_(character_body_2d).tscn" id="1_player"]
+[ext_resource type="Texture2D" uid="uid://dfsyfqu4xfcxh" path="res://assets/wood_floor.png" id="4_dfjjl"]
+[ext_resource type="Script" uid="uid://dfs3wj51iwun" path="res://player/stamina_bar_(progress_bar).gd" id="4_stamina"]
+[ext_resource type="Script" uid="uid://dowwp2dvl2tys" path="res://player/health_bar_(progress_bar).gd" id="5_health"]
+[ext_resource type="Texture2D" uid="uid://bs8vxqlxckr17" path="res://assets/lame_staris_upward.png" id="6_at1ld"]
+[ext_resource type="PackedScene" path="res://levels/stairs.tscn" id="6_stairs"]
+[ext_resource type="PackedScene" uid="uid://du7yolbpplxy6" path="res://levels/Pillar.tscn" id="7_at1ld"]
+[ext_resource type="PackedScene" uid="uid://b3ypb642mdpxk" path="res://levels/basic_wall_small_3.tscn" id="8_sd18g"]
+[ext_resource type="PackedScene" uid="uid://tjnwlodpdgw0" path="res://levels/basic_wall_2.tscn" id="9_vm7no"]
+[ext_resource type="PackedScene" uid="uid://ojhyhs3q17pk" path="res://levels/Bookshelf.tscn" id="10_sd18g"]
+[ext_resource type="PackedScene" uid="uid://co4j0xm306ml" path="res://levels/Window1.tscn" id="11_hbb88"]
+[ext_resource type="PackedScene" path="res://enemies/telegraph_boss.tscn" id="11_vm7no"]
+
+[node name="Level2" type="Node2D" unique_id=1698066715]
+
+[node name="Player (CharacterBody2D)" parent="." unique_id=807877464 instance=ExtResource("1_player")]
+position = Vector2(119, 411)
+
+[node name="HUD (CanvasLayer)" type="CanvasLayer" parent="." unique_id=493117320]
+
+[node name="StaminaBar (ProgressBar)" type="ProgressBar" parent="HUD (CanvasLayer)" unique_id=235782287 node_paths=PackedStringArray("player")]
+offset_left = 16.0
+offset_top = 7.0
+offset_right = 150.0
+offset_bottom = 34.0
+mouse_filter = 2
+max_value = 240.0
+script = ExtResource("4_stamina")
+player = NodePath("../../Player (CharacterBody2D)")
+
+[node name="HealthBar (ProgressBar)" type="ProgressBar" parent="HUD (CanvasLayer)" unique_id=897526367 node_paths=PackedStringArray("player")]
+offset_left = 15.0
+offset_top = 39.0
+offset_right = 149.0
+offset_bottom = 66.0
+mouse_filter = 2
+script = ExtResource("5_health")
+player = NodePath("../../Player (CharacterBody2D)")
+
+[node name="Level" type="Node2D" parent="." unique_id=1346773735]
+
+[node name="Floor" type="TextureRect" parent="Level" unique_id=315377531]
+z_index = -10
+texture_filter = 1
+offset_top = -190.0
+offset_right = 768.0
+offset_bottom = 512.0
+mouse_filter = 2
+texture = ExtResource("4_dfjjl")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="ReturnStairs" parent="Level" unique_id=970214976 instance=ExtResource("6_stairs")]
+position = Vector2(72, 415)
+next_level = "res://main.tscn"
+stairs_texture = ExtResource("6_at1ld")
+
+[node name="Wall (StaticBody2D)" parent="Level" unique_id=1469273161 instance=ExtResource("7_at1ld")]
+position = Vector2(227, 162)
+
+[node name="Wall (StaticBody2D)17" parent="Level" unique_id=1563437552 instance=ExtResource("7_at1ld")]
+position = Vector2(543, 162)
+
+[node name="Wall (StaticBody2D)18" parent="Level" unique_id=2055335475 instance=ExtResource("7_at1ld")]
+position = Vector2(543, -31)
+
+[node name="Wall (StaticBody2D)16" parent="Level" unique_id=310962061 instance=ExtResource("7_at1ld")]
+position = Vector2(227, -31)
+
+[node name="Wall (StaticBody2D)2" parent="Level" unique_id=1724899630 instance=ExtResource("8_sd18g")]
+position = Vector2(15, 415)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)3" parent="Level" unique_id=1790768537 instance=ExtResource("8_sd18g")]
+position = Vector2(749, 415)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)4" parent="Level" unique_id=1317394454 instance=ExtResource("9_vm7no")]
+position = Vector2(127, 494)
+
+[node name="Wall (StaticBody2D)7" parent="Level" unique_id=991549308 instance=ExtResource("9_vm7no")]
+position = Vector2(127, 335)
+
+[node name="Wall (StaticBody2D)8" parent="Level" unique_id=1181387703 instance=ExtResource("9_vm7no")]
+position = Vector2(637, 336)
+
+[node name="Wall (StaticBody2D)5" parent="Level" unique_id=311275634 instance=ExtResource("9_vm7no")]
+position = Vector2(382, 494)
+
+[node name="Wall (StaticBody2D)6" parent="Level" unique_id=795622976 instance=ExtResource("9_vm7no")]
+position = Vector2(637, 494)
+
+[node name="Wall (StaticBody2D)9" parent="Level" unique_id=1491217765 instance=ExtResource("9_vm7no")]
+position = Vector2(15, 191)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)10" parent="Level" unique_id=1462872754 instance=ExtResource("9_vm7no")]
+position = Vector2(15, -64)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)11" parent="Level" unique_id=644291485 instance=ExtResource("9_vm7no")]
+position = Vector2(749, 192)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)12" parent="Level" unique_id=816733116 instance=ExtResource("9_vm7no")]
+position = Vector2(749, -63)
+rotation = 1.5707964
+
+[node name="Wall (StaticBody2D)13" parent="Level" unique_id=1511896484 instance=ExtResource("9_vm7no")]
+position = Vector2(637, -206)
+
+[node name="Wall (StaticBody2D)14" parent="Level" unique_id=1448173579 instance=ExtResource("9_vm7no")]
+position = Vector2(382, -206)
+
+[node name="Wall (StaticBody2D)15" parent="Level" unique_id=116171677 instance=ExtResource("9_vm7no")]
+position = Vector2(127, -206)
+
+[node name="Wall (StaticBody2D)19" parent="Level" unique_id=1138513881 instance=ExtResource("10_sd18g")]
+position = Vector2(55, 287)
+
+[node name="Wall (StaticBody2D)20" parent="Level" unique_id=598583428 instance=ExtResource("10_sd18g")]
+position = Vector2(141, 287)
+
+[node name="Wall (StaticBody2D)21" parent="Level" unique_id=1574722893 instance=ExtResource("10_sd18g")]
+position = Vector2(141, 195)
+
+[node name="Wall (StaticBody2D)22" parent="Level" unique_id=2021393753 instance=ExtResource("10_sd18g")]
+position = Vector2(55, 195)
+
+[node name="Wall (StaticBody2D)23" parent="Level" unique_id=1332023231 instance=ExtResource("10_sd18g")]
+position = Vector2(55, 104)
+
+[node name="Wall (StaticBody2D)24" parent="Level" unique_id=250223581 instance=ExtResource("10_sd18g")]
+position = Vector2(141, 104)
+
+[node name="Wall (StaticBody2D)25" parent="Level" unique_id=1116812456 instance=ExtResource("10_sd18g")]
+position = Vector2(141, 7)
+
+[node name="Wall (StaticBody2D)26" parent="Level" unique_id=1173770467 instance=ExtResource("10_sd18g")]
+position = Vector2(55, 7)
+
+[node name="Wall (StaticBody2D)27" parent="Level" unique_id=1695919122 instance=ExtResource("10_sd18g")]
+position = Vector2(55, -89)
+
+[node name="Wall (StaticBody2D)28" parent="Level" unique_id=1079664930 instance=ExtResource("10_sd18g")]
+position = Vector2(141, -89)
+
+[node name="Wall (StaticBody2D)29" parent="Level" unique_id=1557421739 instance=ExtResource("10_sd18g")]
+position = Vector2(637, 287)
+
+[node name="Wall (StaticBody2D)30" parent="Level" unique_id=1790781081 instance=ExtResource("10_sd18g")]
+position = Vector2(637, 195)
+
+[node name="Wall (StaticBody2D)31" parent="Level" unique_id=649483490 instance=ExtResource("10_sd18g")]
+position = Vector2(637, 104)
+
+[node name="Wall (StaticBody2D)32" parent="Level" unique_id=1549465087 instance=ExtResource("10_sd18g")]
+position = Vector2(637, 7)
+
+[node name="Wall (StaticBody2D)33" parent="Level" unique_id=443684081 instance=ExtResource("10_sd18g")]
+position = Vector2(637, -89)
+
+[node name="Wall (StaticBody2D)34" parent="Level" unique_id=1551539599 instance=ExtResource("11_hbb88")]
+position = Vector2(286, -203.99998)
+scale = Vector2(0.935, 0.335)
+
+[node name="Wall (StaticBody2D)40" parent="Level" unique_id=835420030 instance=ExtResource("11_hbb88")]
+position = Vector2(227, -203.99998)
+scale = Vector2(0.935, 0.335)
+
+[node name="Wall (StaticBody2D)35" parent="Level" unique_id=2002443984 instance=ExtResource("11_hbb88")]
+position = Vector2(350, -203.99998)
+scale = Vector2(0.935, 0.335)
+
+[node name="Wall (StaticBody2D)36" parent="Level" unique_id=1485575627 instance=ExtResource("11_hbb88")]
+position = Vector2(414, -203.99998)
+scale = Vector2(0.935, 0.335)
+
+[node name="Wall (StaticBody2D)37" parent="Level" unique_id=133136294 instance=ExtResource("11_hbb88")]
+position = Vector2(477.99997, -203.99998)
+scale = Vector2(0.935, 0.335)
+
+[node name="Wall (StaticBody2D)38" parent="Level" unique_id=1748342069 instance=ExtResource("11_hbb88")]
+position = Vector2(542, -203.99998)
+scale = Vector2(0.935, 0.335)
+
+[node name="Wall (StaticBody2D)39" parent="Level" unique_id=1038790815 instance=ExtResource("11_hbb88")]
+position = Vector2(542, -203.99998)
+scale = Vector2(0.935, 0.335)
+
+[node name="TelegraphBoss" parent="." unique_id=527390136 instance=ExtResource("11_vm7no")]
+position = Vector2(382, -103)
+boss_name = "Ash Warden"
+engage_range = 280.0
+disengage_range = 650.0
+disengage_seconds = 3.0
+cast_range = 190.0
+attack_pause = 1.2
+recovery_seconds = 0.55
+sight_collision_mask = 1
+slam_radius = 105.0
+slam_warning = 1.15
+slam_damage = 25.0
+cleave_radius = 190.0
+cleave_angle = 100.0
+cleave_warning = 1.0
+cleave_damage = 22.0
+barrage_radius = 43.0
+barrage_warning = 1.1
+barrage_damage = 18.0
+barrage_count = 3
+barrage_interval = 0.4

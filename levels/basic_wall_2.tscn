@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://tjnwlodpdgw0"]
+
+[ext_resource type="Texture2D" uid="uid://ccchu5d38bdve" path="res://assets/not_as_nice_wall_2.png" id="1_guw8r"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7imt7"]
+size = Vector2(256, 32)
+
+[node name="Wall (StaticBody2D)" type="StaticBody2D" unique_id=1469273161]
+
+[node name="Polygon2D" type="Polygon2D" parent="." unique_id=389557725]
+color = Color(0, 0, 0, 1)
+polygon = PackedVector2Array(-128, -16, 128, -16, 128, 16, -128, 16)
+uv = PackedVector2Array(-128, -16, 128, -16, 128, 16, -128, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=737110676]
+shape = SubResource("RectangleShape2D_7imt7")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=678131935]
+texture_filter = 1
+offset_left = -128.0
+offset_top = -16.0
+offset_right = 128.0
+offset_bottom = 16.0
+texture = ExtResource("1_guw8r")
+expand_mode = 1
+stretch_mode = 1

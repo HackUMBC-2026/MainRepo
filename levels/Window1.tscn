@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://co4j0xm306ml"]
+
+[ext_resource type="Texture2D" uid="uid://c3mngoje266ld" path="res://assets/stained_glass_red_evil.png" id="1_o2hco"]
+
+[node name="Wall (StaticBody2D)" type="StaticBody2D" unique_id=1469273161]
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=621277226]
+texture_filter = 1
+offset_left = -63.0
+offset_top = -61.0
+offset_right = 68.0
+offset_bottom = 48.0
+texture = ExtResource("1_o2hco")
+expand_mode = 1

@@ -19,37 +19,7 @@ shape = SubResource("RectangleShape2D_7imt7")
 texture_filter = 1
 offset_left = -64.0
 offset_top = -16.0
-offset_right = -24.0
-offset_bottom = 16.0
-texture = ExtResource("1_fnhyc")
-expand_mode = 1
-stretch_mode = 1
-
-[node name="TextureRect2" type="TextureRect" parent="." unique_id=1169881700]
-texture_filter = 1
-offset_left = 16.0
-offset_top = -16.0
-offset_right = 56.0
-offset_bottom = 16.0
-texture = ExtResource("1_fnhyc")
-expand_mode = 1
-stretch_mode = 1
-
-[node name="TextureRect4" type="TextureRect" parent="." unique_id=1806682028]
-texture_filter = 1
-offset_left = 56.0
-offset_top = -16.0
 offset_right = 64.0
-offset_bottom = 16.0
-texture = ExtResource("1_fnhyc")
-expand_mode = 1
-stretch_mode = 1
-
-[node name="TextureRect3" type="TextureRect" parent="." unique_id=872685326]
-texture_filter = 1
-offset_left = -24.0
-offset_top = -16.0
-offset_right = 16.0
 offset_bottom = 16.0
 texture = ExtResource("1_fnhyc")
 expand_mode = 1

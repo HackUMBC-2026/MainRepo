@@ -4,9 +4,11 @@
 [ext_resource type="PackedScene" uid="uid://bq3wy2602nigk" path="res://levels/basic_wall.tscn" id="2_0xm2m"]
 [ext_resource type="Script" uid="uid://dfs3wj51iwun" path="res://player/stamina_bar_(progress_bar).gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://dowwp2dvl2tys" path="res://player/health_bar_(progress_bar).gd" id="4_lquwl"]
-[ext_resource type="PackedScene" uid="uid://cj3ocy7wso83q" path="res://levels/basic_wall_small.tscn" id="5_lquwl"]
+[ext_resource type="Texture2D" uid="uid://bs8vxqlxckr17" path="res://assets/lame_staris_upward.png" id="5_kek77"]
+[ext_resource type="PackedScene" uid="uid://cj3ocy7wso83q" path="res://levels/basic_wall_small_2.tscn" id="5_lquwl"]
 [ext_resource type="Texture2D" uid="uid://dh7ctsvk2elta" path="res://assets/floor_tile_stone_sad_with_moss_3.png" id="6_7mycd"]
 [ext_resource type="PackedScene" path="res://enemies/wandering_enemy.tscn" id="7_272bh"]
+[ext_resource type="PackedScene" path="res://levels/stairs.tscn" id="8_stairs"]
 
 [node name="Main" type="Node2D" unique_id=1017274531]
 
@@ -34,6 +36,12 @@ script = ExtResource("4_lquwl")
 player = NodePath("../../Player (CharacterBody2D)")
 
 [node name="Level" type="Node2D" parent="." unique_id=324806368]
+
+[node name="StairsToLevel2" parent="Level" unique_id=2134469371 instance=ExtResource("8_stairs")]
+position = Vector2(728, 30)
+rotation = -1.5707964
+next_level = "res://levels/level_2.tscn"
+stairs_texture = ExtResource("5_kek77")
 
 [node name="Wall (StaticBody2D)6" parent="Level" unique_id=1469273161 instance=ExtResource("2_0xm2m")]
 position = Vector2(424, 605)
@@ -132,6 +140,10 @@ rotation = 1.5707964
 
 [node name="Wall (StaticBody2D)26" parent="Level" unique_id=274449867 instance=ExtResource("5_lquwl")]
 position = Vector2(728, 333)
+
+[node name="Wall (StaticBody2D)29" parent="Level" unique_id=804635355 instance=ExtResource("5_lquwl")]
+position = Vector2(776, 29)
+rotation = 1.5707964
 
 [node name="TextureRect" type="TextureRect" parent="Level" unique_id=154785832]
 z_index = -10

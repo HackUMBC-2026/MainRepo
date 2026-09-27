@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://ojhyhs3q17pk"]
+
+[ext_resource type="Texture2D" uid="uid://l8873hfqpyf" path="res://assets/bookshelf_prototype.png" id="1_u60p2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7imt7"]
+size = Vector2(50, 75)
+
+[node name="Wall (StaticBody2D)" type="StaticBody2D" unique_id=1469273161]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=737110676]
+position = Vector2(10, -14.5)
+shape = SubResource("RectangleShape2D_7imt7")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=621277226]
+texture_filter = 1
+offset_left = -24.0
+offset_top = -74.0
+offset_right = 107.0
+offset_bottom = 35.0
+texture = ExtResource("1_u60p2")
+expand_mode = 1
