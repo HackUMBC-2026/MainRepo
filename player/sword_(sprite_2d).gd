@@ -51,6 +51,19 @@ enum AttackType { NONE, LEFT, CENTER, HEAVY }
 @export_group("General")
 @export var attack_cooldown: float = 0.10
 
+@export_group("Damage")
+@export var swipe_damage: float = 1.0
+@export var thrust_damage: float = 2.0
+@export var heavy_damage: float = 3.0
+@export var heavy_impact_radius: float = 20.0
+
+@onready var blade_hitbox: Area2D = $BladeHitbox
+@onready var hilt_hitbox: Area2D = $HiltHitbox
+
+var damaged_this_window: Dictionary = {}
+var pending_heavy_hit: bool = false
+var pending_heavy_position: Vector2 = Vector2.ZERO
+
 var selected_position := SwordPosition.RIGHT
 var hilt_first: bool = false
 var is_attacking: bool = false
@@ -106,7 +119,24 @@ func _ready() -> void:
 
 	if is_instance_valid(camera):
 		camera_rest_offset = camera.offset
+		
+func _physics_process(_delta: float) -> void:
+	if is_striking:
+		var hitbox := hilt_hitbox if hilt_first else blade_hitbox
+		var damage := (
+			thrust_damage
+			if attack_type == AttackType.CENTER
+			else swipe_damage
+		)
 
+		for body in hitbox.get_overlapping_bodies():
+			if body is Enemy and not damaged_this_window.has(body):
+				damaged_this_window[body] = true
+				body.take_damage(damage)
+
+	if pending_heavy_hit:
+		pending_heavy_hit = false
+		damage_heavy_impact()
 
 func _process(delta: float) -> void:
 	elapsed_time += delta
@@ -502,17 +532,35 @@ func set_striking(value: bool) -> void:
 		return
 
 	is_striking = value
-
+	if value:
+		damaged_this_window.clear()
 	if value:
 		attack_window_started.emit(hilt_first)
 	else:
 		attack_window_ended.emit()
 
+func damage_heavy_impact() -> void:
+	var circle := CircleShape2D.new()
+	circle.radius = heavy_impact_radius
 
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = circle
+	query.transform = Transform2D(0.0, pending_heavy_position)
+	query.exclude = [player.get_rid()]
+
+	for result in get_world_2d().direct_space_state.intersect_shape(query):
+		var body = result["collider"]
+
+		if body is Enemy:
+			if body.global_position.distance_to(player.global_position) <= heavy_range:
+				body.take_damage(heavy_damage)
+				
 func trigger_heavy_impact() -> void:
 	var impact_position := player.to_global(
 		aim_direction * tip_target_distance
 	)
+	pending_heavy_position = impact_position
+	pending_heavy_hit = true
 	heavy_impact.emit(impact_position, charge)
 
 	if charge < 0.999:

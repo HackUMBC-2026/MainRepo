@@ -3,6 +3,8 @@
 [ext_resource type="PackedScene" uid="uid://bjfq3e644vrvt" path="res://player_(character_body_2d).tscn" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://bq3wy2602nigk" path="res://levels/basic_wall.tscn" id="2_0xm2m"]
 [ext_resource type="Script" uid="uid://dfs3wj51iwun" path="res://player/stamina_bar_(progress_bar).gd" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://bofmu1do1uvdi" path="res://enemies/basic_enemy_(character_body_2d).tscn" id="4_1bvp3"]
+[ext_resource type="Script" uid="uid://dowwp2dvl2tys" path="res://player/health_bar_(progress_bar).gd" id="4_lquwl"]
 
 [node name="Main" type="Node2D" unique_id=1017274531]
 
@@ -25,3 +27,15 @@ offset_bottom = 34.0
 max_value = 240.0
 script = ExtResource("3_h2yge")
 player = NodePath("../../Player (CharacterBody2D)")
+
+[node name="HealthBar (ProgressBar)" type="ProgressBar" parent="HUD (CanvasLayer)" unique_id=1726513055 node_paths=PackedStringArray("player")]
+offset_left = 15.0
+offset_top = 39.0
+offset_right = 149.0
+offset_bottom = 66.0
+max_value = 240.0
+script = ExtResource("4_lquwl")
+player = NodePath("../../Player (CharacterBody2D)")
+
+[node name="Basic Enemy (CharacterBody2D)" parent="." unique_id=1618300885 node_paths=PackedStringArray("target") instance=ExtResource("4_1bvp3")]
+target = NodePath("../Player (CharacterBody2D)")

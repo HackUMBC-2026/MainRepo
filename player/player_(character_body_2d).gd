@@ -43,7 +43,33 @@ var _dash_buffer_left: float = 0.0
 var _dash_cooldown_left: float = 0.0
 var _base_sprite_scale: Vector2
 
+@export var invincibility_duration: float = 0.6
 
+var invincibility_left: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if invincibility_left > 0.0:
+		invincibility_left = maxf(invincibility_left - delta, 0.0)
+
+		if invincibility_left <= 0.0:
+			is_invincible = false
+
+
+func take_damage(amount: float) -> void:
+	if is_invincible or health <= 0.0:
+		return
+
+	health = maxf(health - amount, 0.0)
+
+	if health <= 0.0:
+		velocity = Vector2.ZERO
+		set_physics_process(false)
+		return
+
+	is_invincible = true
+	invincibility_left = invincibility_duration
+	
 func _ready() -> void:
 	_base_sprite_scale = sprite.scale
 
