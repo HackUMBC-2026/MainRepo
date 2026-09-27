@@ -1,0 +1,116 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://enemies/basic_enemy_(character_body_2d).tscn" id="1_base"]
+[ext_resource type="Script" path="res://enemies/telegraph_boss.gd" id="2_boss"]
+[ext_resource type="Script" path="res://enemies/boss_hud.gd" id="3_hud"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 26.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
+bg_color = Color(0.08, 0.035, 0.045, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.32, 0.18, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health"]
+bg_color = Color(0.85, 0.12, 0.1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cast"]
+bg_color = Color(1, 0.6, 0.1, 1)
+
+[node name="TelegraphBoss" instance=ExtResource("1_base")]
+script = ExtResource("2_boss")
+move_speed = 65.0
+max_health = 120.0
+stop_distance = 90.0
+show_health_bar = false
+
+[node name="Sprite2D" parent="." index="0"]
+modulate = Color(1, 0.5, 0.3, 1)
+scale = Vector2(0.5, 0.5)
+
+[node name="CollisionShape2D" parent="." index="1"]
+shape = SubResource("CircleShape2D_body")
+
+[node name="FacingIndicator" type="Node2D" parent="."]
+
+[node name="Arrow" type="Polygon2D" parent="FacingIndicator"]
+color = Color(1, 0.75, 0.25, 1)
+polygon = PackedVector2Array(25, -6, 36, 0, 25, 6)
+
+[node name="BossHUD" type="CanvasLayer" parent="."]
+layer = 10
+script = ExtResource("3_hud")
+
+[node name="Root" type="Control" parent="BossHUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="Control" parent="BossHUD/Root"]
+visible = false
+layout_mode = 0
+anchor_left = 0.27
+anchor_right = 0.98
+offset_top = 7.0
+offset_bottom = 68.0
+mouse_filter = 2
+
+[node name="BossName" type="Label" parent="BossHUD/Root/Panel"]
+layout_mode = 0
+anchor_right = 1.0
+offset_bottom = 19.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.87, 0.64, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "Ash Warden"
+horizontal_alignment = 1
+
+[node name="Health" type="ProgressBar" parent="BossHUD/Root/Panel"]
+layout_mode = 0
+anchor_right = 1.0
+offset_top = 21.0
+offset_bottom = 34.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_health")
+max_value = 120.0
+value = 120.0
+step = 0.0
+show_percentage = false
+
+[node name="CastName" type="Label" parent="BossHUD/Root/Panel"]
+layout_mode = 0
+anchor_right = 1.0
+offset_top = 36.0
+offset_bottom = 51.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.3, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="CastProgress" type="ProgressBar" parent="BossHUD/Root/Panel"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+offset_top = 55.0
+offset_bottom = 60.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_cast")
+max_value = 1.0
+step = 0.0
+show_percentage = false

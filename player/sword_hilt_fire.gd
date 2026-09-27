@@ -1,43 +1,47 @@
 extends Node2D
 class_name SwordHiltFire
 
-## Cosmetic thrusters: observe sword motion without applying any forces.
-@export var jet_length: float = 34.0
-@export var jet_width: float = 5.0
+## A compact cloud of fiery motes that stays centered on the hilt.
+@export var orb_radius: float = 9.0
 @export var power_jet_length: float = 100.0
 @export var power_jet_width: float = 12.0
-@export var motion_sensitivity: float = 1.0
-@export var idle_flicker_strength: float = 0.12
-@export var spark_rate: float = 22.0
-
-# All six ports sit on the grip/pommel. The side pairs also suggest torque.
-const PORT_POSITIONS := [
-	Vector2(-2.0, -3.0), Vector2(2.0, -3.0),
-	Vector2(-2.0, 3.0), Vector2(2.0, 3.0),
-	Vector2(0.0, -4.0), Vector2(0.0, 4.0)
-]
-const PORT_DIRECTIONS := [
-	Vector2.LEFT, Vector2.RIGHT, Vector2.LEFT, Vector2.RIGHT,
-	Vector2.UP, Vector2.DOWN
-]
+@export var spark_rate: float = 50.0
+@export var trail_spacing: float = 4.0
+@export var trail_lifetime: float = 0.5
 
 var enabled: bool = true
-var has_motion_sample: bool = false
-var previous_position: Vector2
-var previous_angle: float = 0.0
-var filtered_velocity: Vector2 = Vector2.ZERO
-var filtered_turn_speed: float = 0.0
-var thrust: Vector2 = Vector2.ZERO
-var turning_thrust: float = 0.0
-var attack_energy: float = 0.0
 var elapsed: float = 0.0
-var strengths: PackedFloat32Array = PackedFloat32Array([0, 0, 0, 0, 0, 0])
+var glow_strength: float = 1.0
 var spark_budget: float = 0.0
 var sparks: Array[Dictionary] = []
+var trail_motes: Array[Dictionary] = []
+var previous_hilt_position: Vector2
+var has_trail_position: bool = false
 var random := RandomNumberGenerator.new()
 var power_jet_active: bool = false
 var power_jet_age: float = 0.0
 var power_exhaust_direction: Vector2 = Vector2.DOWN
+
+
+func _ready() -> void:
+	show_behind_parent = true
+	random.randomize()
+	# Start with a full cloud, with staggered particle ages to avoid synchronized flicker.
+	for index in range(24):
+		spawn_mote(true)
+
+
+func spawn_mote(prewarm: bool = false) -> void:
+	var direction := Vector2.RIGHT.rotated(random.randf_range(0.0, TAU))
+	var lifetime := random.randf_range(0.4, 0.75)
+	sparks.append({
+		"position": direction * sqrt(random.randf()) * orb_radius * 0.8,
+		"velocity": direction * random.randf_range(1.0, 4.0),
+		"swirl": random.randf_range(-1.5, 1.5),
+		"size": random.randf_range(1.0, 2.3),
+		"age": random.randf_range(0.08, lifetime * 0.9) if prewarm else 0.0,
+		"lifetime": lifetime
+	})
 
 
 func begin_power_release(attack_direction: Vector2) -> void:
@@ -52,137 +56,89 @@ func end_power_release() -> void:
 	power_jet_active = false
 
 
-func _ready() -> void:
-	show_behind_parent = true
-	random.randomize()
-
-
-func sample_motion(world_position: Vector2, world_angle: float, delta: float, energy: float) -> void:
-	if not enabled or delta <= 0.0:
-		return
-	attack_energy = energy
-	var displacement := world_position - previous_position
-	if not has_motion_sample or displacement.length() > 240.0:
-		# Initial placement and teleports must not produce a huge ignition burst.
-		has_motion_sample = true
-		previous_position = world_position
-		previous_angle = world_angle
-		filtered_velocity = Vector2.ZERO
-		filtered_turn_speed = 0.0
-		thrust = Vector2.ZERO
-		turning_thrust = 0.0
-		return
-
-	var smoothing := 1.0 - exp(-24.0 * delta)
-	var velocity := filtered_velocity.lerp(displacement / delta, smoothing)
-	var acceleration := (velocity - filtered_velocity) / delta
-	var turn_speed := lerpf(
-		filtered_turn_speed, angle_difference(previous_angle, world_angle) / delta, smoothing
-	)
-	var turn_acceleration := (turn_speed - filtered_turn_speed) / delta
-	# Acceleration creates launch/braking bursts; a little velocity keeps moving jets alive.
-	var target_thrust := (
-		(acceleration / 2400.0 + velocity / 900.0) * motion_sensitivity
-	).limit_length(1.0)
-	thrust = thrust.lerp(target_thrust, 1.0 - exp(-32.0 * delta))
-	turning_thrust = lerpf(
-		turning_thrust,
-		clampf((turn_acceleration / 180.0 + turn_speed / 24.0) * motion_sensitivity, -1.0, 1.0),
-		1.0 - exp(-32.0 * delta)
-	)
-	filtered_velocity = velocity
-	filtered_turn_speed = turn_speed
-	previous_position = world_position
-	previous_angle = world_angle
-
-
 func extinguish() -> void:
 	end_power_release()
 	enabled = false
-	thrust = Vector2.ZERO
-	turning_thrust = 0.0
-	attack_energy = 0.0
 	spark_budget = 0.0
 
 
 func _process(delta: float) -> void:
 	elapsed += delta
+	update_ember_trail(delta)
+	glow_strength = move_toward(glow_strength, 1.0 if enabled else 0.0, delta * 7.0)
 	if power_jet_active:
 		power_jet_age += delta
-	var strongest_port := 0
-	for port in range(PORT_POSITIONS.size()):
-		var target_strength := 0.0
-		if enabled:
-			var exhaust: Vector2 = PORT_DIRECTIONS[port].rotated(global_rotation)
-			# Exhaust points opposite the push needed to accelerate or brake.
-			var translation := maxf(0.0, -exhaust.dot(thrust))
-			var torque_sign := -signf(PORT_POSITIONS[port].cross(PORT_DIRECTIONS[port]))
-			var rotation_burst := maxf(0.0, torque_sign * turning_thrust) * 0.55
-			var pulse_phase := fposmod(elapsed * 6.0 + port * 0.173, 1.0)
-			var idle_pulse := (1.0 - smoothstep(0.04, 0.24, pulse_phase)) * idle_flicker_strength
-			var flutter := 0.85 + 0.15 * sin(elapsed * 83.0 + port * 2.7)
-			target_strength = clampf(
-				(maxf(translation, rotation_burst) * (0.65 + attack_energy * 0.65) + idle_pulse) * flutter,
-				0.0, 1.4
-			)
-		var response := 65.0 if target_strength > strengths[port] else 22.0
-		strengths[port] = lerpf(strengths[port], target_strength, 1.0 - exp(-response * delta))
-		if strengths[port] > strengths[strongest_port]:
-			strongest_port = port
-
-	# Keep a small, bounded pool of world-space embers after the hilt moves away.
 	for index in range(sparks.size() - 1, -1, -1):
 		var spark: Dictionary = sparks[index]
 		spark["age"] += delta
 		if spark["age"] >= spark["lifetime"]:
 			sparks.remove_at(index)
 			continue
-		spark["position"] += spark["velocity"] * delta
-		spark["velocity"] *= exp(-4.0 * delta)
+		# Local positions keep the ball attached during swings; there is no upward gravity.
+		var mote_position: Vector2 = spark["position"]
+		mote_position = mote_position.rotated(float(spark["swirl"]) * delta)
+		mote_position += spark["velocity"] * delta
+		spark["position"] = mote_position.limit_length(orb_radius)
 
-	if enabled and strengths[strongest_port] > 0.25:
-		spark_budget = minf(spark_budget + delta * spark_rate * strengths[strongest_port], 3.0)
-		while spark_budget >= 1.0 and sparks.size() < 24:
-			spawn_spark(strongest_port)
+	if enabled:
+		spark_budget = minf(spark_budget + delta * spark_rate, 3.0)
+		while spark_budget >= 1.0 and sparks.size() < 40:
+			spawn_mote()
 			spark_budget -= 1.0
-	else:
-		spark_budget = 0.0
 	queue_redraw()
 
 
-func spawn_spark(port: int) -> void:
-	var direction: Vector2 = PORT_DIRECTIONS[port].rotated(
-		global_rotation + random.randf_range(-0.25, 0.25)
-	)
-	sparks.append({
-		"position": to_global(PORT_POSITIONS[port]),
-		"velocity": direction * random.randf_range(35.0, 85.0) + filtered_velocity * 0.12,
-		"age": 0.0,
-		"lifetime": random.randf_range(0.10, 0.22)
-	})
+func update_ember_trail(delta: float) -> void:
+	for index in range(trail_motes.size() - 1, -1, -1):
+		var mote: Dictionary = trail_motes[index]
+		mote["age"] += delta
+		if mote["age"] >= mote["lifetime"]:
+			trail_motes.remove_at(index)
+			continue
+		mote["position"] += mote["velocity"] * delta
+		mote["velocity"] *= exp(-3.0 * delta)
+
+	if enabled and has_trail_position:
+		var distance := previous_hilt_position.distance_to(global_position)
+		# Fill the path during fast swings, but do not connect teleports.
+		if distance > 0.5 and distance < 240.0:
+			var count := clampi(ceili(distance / maxf(trail_spacing, 1.0)), 1, 48)
+			for index in range(count):
+				var along := (float(index) + random.randf()) / count
+				trail_motes.append({
+					"position": previous_hilt_position.lerp(global_position, along)
+						+ Vector2.from_angle(random.randf() * TAU) * random.randf_range(0.0, 3.0),
+					"velocity": Vector2.from_angle(random.randf() * TAU) * random.randf_range(3.0, 10.0),
+					"age": 0.0, "lifetime": maxf(trail_lifetime, 0.05) * random.randf_range(0.8, 1.2),
+					"size": random.randf_range(1.0, 2.2)
+				})
+	while trail_motes.size() > 128:
+		trail_motes.pop_front()
+	previous_hilt_position = global_position
+	has_trail_position = true
 
 
 func _draw() -> void:
-	for port in range(PORT_POSITIONS.size()):
-		var strength := strengths[port]
-		if strength < 0.015:
-			continue
-		var origin: Vector2 = PORT_POSITIONS[port]
-		var direction: Vector2 = PORT_DIRECTIONS[port]
-		var length := 2.0 + jet_length * strength
-		var width := jet_width * (0.3 + 0.7 * minf(strength, 1.0))
-		var flicker := sin(elapsed * 67.0 + port * 1.9)
-		var alpha := clampf(strength * 5.0, 0.0, 1.0)
-		draw_flame(origin, direction, length, width, flicker, alpha)
+	# These embers stay in world space while the central particle ball follows the hilt.
+	for mote in trail_motes:
+		var progress: float = mote["age"] / mote["lifetime"]
+		var color := Color(1.0, 0.9, 0.35).lerp(Color(1.0, 0.13, 0.015, 0.0), progress)
+		var center := to_local(mote["position"])
+		var size: float = mote["size"] * (1.0 - progress * 0.5)
+		draw_circle(center, size * 2.0, Color(1.0, 0.25, 0.02, color.a * 0.12))
+		draw_rect(Rect2(center - Vector2.ONE * size * 0.5, Vector2.ONE * size), color)
+
+	if glow_strength > 0.01:
+		var pulse := 0.92 + 0.08 * sin(elapsed * 5.0)
+		draw_circle(Vector2.ZERO, orb_radius * pulse, Color(1.0, 0.2, 0.025, glow_strength * 0.07))
+		draw_circle(Vector2.ZERO, orb_radius * 0.55, Color(1.0, 0.5, 0.05, glow_strength * 0.08))
 
 	if power_jet_active:
-		# A continuous hilt plume pushes opposite the locked slam direction, even when flipped.
 		var direction := power_exhaust_direction.rotated(-global_rotation)
 		var ignition := lerpf(0.65, 1.0, minf(power_jet_age / 0.025, 1.0))
 		var length := power_jet_length * ignition * (1.0 + 0.12 * sin(elapsed * 93.0))
 		var width := power_jet_width * (0.9 + 0.1 * sin(elapsed * 71.0))
 		draw_flame(Vector2.ZERO, direction, length, width, sin(elapsed * 57.0), 1.0)
-		# Smaller branching tongues give the main jet a ragged flame silhouette.
 		for branch in [-1.0, 1.0]:
 			draw_flame(
 				direction * 5.0, direction.rotated(branch * 0.16),
@@ -191,8 +147,12 @@ func _draw() -> void:
 
 	for spark in sparks:
 		var progress: float = spark["age"] / spark["lifetime"]
-		var color := Color(1.0, 0.85, 0.25).lerp(Color(1.0, 0.2, 0.02, 0.0), progress)
-		draw_rect(Rect2(to_local(spark["position"]), Vector2.ONE), color)
+		var color := Color(1.0, 0.95, 0.5).lerp(Color(1.0, 0.16, 0.015), progress)
+		color.a = minf(float(spark["age"]) / 0.08, 1.0) * (1.0 - progress) * glow_strength
+		var mote_position: Vector2 = spark["position"]
+		var size: float = spark["size"]
+		draw_circle(mote_position, size * 1.5, Color(1.0, 0.3, 0.02, color.a * 0.12))
+		draw_rect(Rect2(mote_position - Vector2.ONE * size * 0.5, Vector2.ONE * size), color)
 
 
 func draw_flame(

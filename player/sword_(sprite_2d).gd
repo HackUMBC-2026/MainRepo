@@ -175,15 +175,6 @@ func _physics_process(delta: float) -> void:
 	var steps := maxi(1, ceili(delta / (1.0 / 120.0)))
 	for step in range(steps):
 		advance_combat(delta / steps)
-	# Observe the finished physics pose once per tick; render-frame jitter must not drive jets.
-	var fire_energy := 0.0
-	if is_attacking:
-		fire_energy = 1.0 if is_striking else 0.35
-		if attack_type == AttackType.HEAVY:
-			fire_energy = 1.0 + charge * 0.4 if attack_phase == 1 else 0.25 + charge * 0.35
-	hilt_fire.sample_motion(
-		global_position + Vector2.UP * attack_height, global_rotation, delta, fire_energy
-	)
 
 
 func advance_combat(delta: float) -> void:

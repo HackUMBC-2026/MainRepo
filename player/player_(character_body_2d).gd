@@ -55,6 +55,7 @@ var _base_sprite_scale: Vector2
 
 
 func _ready() -> void:
+	add_to_group("player")
 	sprite.rotation = 0.0
 	sprite.texture = FRONT_TEXTURE
 	_base_sprite_scale = sprite.scale

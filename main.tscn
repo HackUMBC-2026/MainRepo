@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dowwp2dvl2tys" path="res://player/health_bar_(progress_bar).gd" id="4_lquwl"]
 [ext_resource type="PackedScene" uid="uid://cj3ocy7wso83q" path="res://levels/basic_wall_small.tscn" id="5_lquwl"]
 [ext_resource type="Texture2D" uid="uid://dh7ctsvk2elta" path="res://assets/floor_tile_stone_sad_with_moss_3.png" id="6_7mycd"]
+[ext_resource type="PackedScene" path="res://enemies/wandering_enemy.tscn" id="7_272bh"]
 
 [node name="Main" type="Node2D" unique_id=1017274531]
 
@@ -141,3 +142,71 @@ offset_bottom = 1023.0
 texture = ExtResource("6_7mycd")
 expand_mode = 1
 stretch_mode = 1
+
+[node name="WanderingEnemy" parent="Level" unique_id=368134692 instance=ExtResource("7_272bh")]
+position = Vector2(6.639, 26.889)
+auto_find_player = true
+vision_range = 220.0
+vision_angle_degrees = 110.0
+sight_collision_mask = 1
+initial_facing = Vector2(0, 1)
+turn_speed = 8.0
+show_vision_cone = false
+wander_speed = 40.0
+wander_radius = 100.0
+wander_walk_seconds = 2.5
+wander_pause_seconds = 0.7
+investigate_seconds = 4.0
+search_seconds = 2.5
+search_turn_speed = 2.0
+
+[node name="WanderingEnemy2" parent="Level" unique_id=1798052528 instance=ExtResource("7_272bh")]
+position = Vector2(0, 200)
+auto_find_player = true
+vision_range = 220.0
+vision_angle_degrees = 110.0
+sight_collision_mask = 1
+initial_facing = Vector2(0, 1)
+turn_speed = 8.0
+show_vision_cone = false
+wander_speed = 40.0
+wander_radius = 100.0
+wander_walk_seconds = 2.5
+wander_pause_seconds = 0.7
+investigate_seconds = 4.0
+search_seconds = 2.5
+search_turn_speed = 2.0
+
+[node name="WanderingEnemy3" parent="Level" unique_id=47635088 instance=ExtResource("7_272bh")]
+position = Vector2(350, 500)
+auto_find_player = true
+vision_range = 220.0
+vision_angle_degrees = 110.0
+sight_collision_mask = 1
+initial_facing = Vector2(0, 1)
+turn_speed = 8.0
+show_vision_cone = false
+wander_speed = 40.0
+wander_radius = 100.0
+wander_walk_seconds = 2.5
+wander_pause_seconds = 0.7
+investigate_seconds = 4.0
+search_seconds = 2.5
+search_turn_speed = 2.0
+
+[node name="WanderingEnemy4" parent="Level" unique_id=1575697783 instance=ExtResource("7_272bh")]
+position = Vector2(500, 30)
+auto_find_player = true
+vision_range = 220.0
+vision_angle_degrees = 110.0
+sight_collision_mask = 1
+initial_facing = Vector2(0, 1)
+turn_speed = 8.0
+show_vision_cone = false
+wander_speed = 40.0
+wander_radius = 100.0
+wander_walk_seconds = 2.5
+wander_pause_seconds = 0.7
+investigate_seconds = 4.0
+search_seconds = 2.5
+search_turn_speed = 2.0

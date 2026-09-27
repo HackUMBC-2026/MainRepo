@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://enemies/basic_enemy_(character_body_2d).tscn" id="1_base"]
+[ext_resource type="Script" path="res://enemies/wandering_enemy.gd" id="2_behavior"]
+
+[node name="WanderingEnemy" instance=ExtResource("1_base")]
+script = ExtResource("2_behavior")
+
+[node name="FacingIndicator" type="Node2D" parent="."]
+
+[node name="Arrow" type="Polygon2D" parent="FacingIndicator"]
+color = Color(1, 0.85, 0.35, 1)
+polygon = PackedVector2Array(12, -4, 20, 0, 12, 4)
