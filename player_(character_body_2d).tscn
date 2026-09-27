@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://jn616p5i62nu" path="res://assets/FrontFeatherJoan.png" id="2_rkocr"]
 [ext_resource type="Script" uid="uid://d1ciqepfgtprf" path="res://player/sword_(sprite_2d).gd" id="3_k6qw6"]
 [ext_resource type="Texture2D" uid="uid://bmdne02si86pb" path="res://assets/sword_best_3.png" id="3_rkocr"]
+[ext_resource type="Script" path="res://player/sword_hilt_fire.gd" id="5_hilt_fire"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7imt7"]
 radius = 12.0
@@ -13,6 +14,17 @@ size = Vector2(5, 43.99999)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ofk3a"]
 size = Vector2(3.5, 9.184631)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_charge_background"]
+bg_color = Color(0.08, 0.06, 0.12, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.3, 0.5, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_charge_fill"]
+bg_color = Color(1, 1, 1, 1)
 
 [node name="Player (CharacterBody2D)" type="CharacterBody2D" unique_id=894568230]
 motion_mode = 1
@@ -75,27 +87,59 @@ position = Vector2(5, 15)
 [node name="SwordAnchor (Node2D)" type="Node2D" parent="." unique_id=632644628]
 position = Vector2(0, 1)
 
-[node name="Sword (Sprite2D)" type="Sprite2D" parent="SwordAnchor (Node2D)" unique_id=1229185269 node_paths=PackedStringArray("player_sprite")]
+[node name="Sword (Node2D)" type="Node2D" parent="SwordAnchor (Node2D)" unique_id=1229185269 node_paths=PackedStringArray("player_sprite")]
 position = Vector2(1, -16)
-texture = ExtResource("3_rkocr")
-offset = Vector2(9.64, 0)
 script = ExtResource("3_k6qw6")
 player_sprite = NodePath("../../Sprite2D")
 
-[node name="BladeHitbox" type="Area2D" parent="SwordAnchor (Node2D)/Sword (Sprite2D)" unique_id=55666316]
-position = Vector2(-0.36, -3)
+[node name="Visual" type="Sprite2D" parent="SwordAnchor (Node2D)/Sword (Node2D)"]
+texture = ExtResource("3_rkocr")
+offset = Vector2(9.64, 0)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordAnchor (Node2D)/Sword (Sprite2D)/BladeHitbox" unique_id=972544737]
+[node name="HiltFire" type="Node2D" parent="SwordAnchor (Node2D)/Sword (Node2D)/Visual"]
+position = Vector2(-0.98, 25)
+script = ExtResource("5_hilt_fire")
+
+[node name="BladeTip" type="Marker2D" parent="SwordAnchor (Node2D)/Sword (Node2D)"]
+position = Vector2(-0.86, -27)
+
+[node name="HiltTip" type="Marker2D" parent="SwordAnchor (Node2D)/Sword (Node2D)"]
+position = Vector2(-0.98, 29.592316)
+
+[node name="BladeHitbox" type="Area2D" parent="SwordAnchor (Node2D)/Sword (Node2D)" unique_id=55666316]
+position = Vector2(-0.36, -3)
+collision_layer = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordAnchor (Node2D)/Sword (Node2D)/BladeHitbox" unique_id=972544737]
 position = Vector2(-0.5, -1.9999981)
 scale = Vector2(1, 1.0000002)
 shape = SubResource("RectangleShape2D_7imt7")
 
-[node name="HiltHitbox" type="Area2D" parent="SwordAnchor (Node2D)/Sword (Sprite2D)" unique_id=1239554637]
+[node name="HiltHitbox" type="Area2D" parent="SwordAnchor (Node2D)/Sword (Node2D)" unique_id=1239554637]
 position = Vector2(-0.23, 24)
+collision_layer = 0
+monitoring = false
+monitorable = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordAnchor (Node2D)/Sword (Sprite2D)/HiltHitbox" unique_id=1819918002]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordAnchor (Node2D)/Sword (Node2D)/HiltHitbox" unique_id=1819918002]
 position = Vector2(-0.75, 1)
 scale = Vector2(1, 1.0000005)
 shape = SubResource("RectangleShape2D_ofk3a")
+
+[node name="HeavyCharge" type="ProgressBar" parent="."]
+visible = false
+z_index = 10
+offset_left = -18.0
+offset_top = -35.0
+offset_right = 18.0
+offset_bottom = -30.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_charge_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_charge_fill")
+max_value = 1.0
+step = 0.0
+show_percentage = false
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=661474674]

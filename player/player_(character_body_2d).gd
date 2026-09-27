@@ -1,6 +1,8 @@
 extends CharacterBody2D
 class_name Player
 
+signal died
+
 const FRONT_TEXTURE: Texture2D = preload("res://assets/FrontFeatherJoan.png")
 const BACK_TEXTURE: Texture2D = preload("res://assets/Joan back.png")
 const RIGHT_TEXTURE: Texture2D = preload("res://assets/ProfileJoan.png")
@@ -37,7 +39,7 @@ const LEFT_TEXTURE: Texture2D = preload("res://assets/ProfileLeftJoan.png")
 @export var dash_stretch: float = 0.08
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var sword: Node2D = $"SwordAnchor (Node2D)/Sword (Sprite2D)"
+@onready var sword: Node2D = $"SwordAnchor (Node2D)/Sword (Node2D)"
 
 var heavy_attack_locked: bool = false
 var invincibility_left: float = 0.0
@@ -74,6 +76,11 @@ func take_damage(amount: float) -> void:
 
 	if health <= 0.0:
 		velocity = Vector2.ZERO
+		is_sprinting = false
+		is_dashing = false
+		dash_movement_lock_time = 0.0
+		heavy_attack_locked = false
+		died.emit()
 		set_physics_process(false)
 		return
 
@@ -86,6 +93,8 @@ func receive_attack(
 	attacker: Node,
 	parryable: bool = true
 ) -> void:
+	if health <= 0.0:
+		return
 	var damage_multiplier := 1.0
 	if is_instance_valid(sword) and sword.has_method("defend_against_attack"):
 		damage_multiplier = float(

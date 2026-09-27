@@ -1,4 +1,6 @@
-extends Sprite2D
+extends Node2D
+
+const FLAME_EXPLOSION = preload("res://player/flame_explosion.gd")
 
 signal attack_window_started(hilt_first: bool)
 signal attack_window_ended
@@ -6,13 +8,10 @@ signal heavy_impact(world_position: Vector2, charge: float)
 
 enum SwordPosition { LEFT, CENTER, RIGHT }
 enum AttackType { NONE, LEFT, CENTER, HEAVY }
+enum LeftAttackPhase { WINDUP, FIRST_SWIPE, GAP, SECOND_SWIPE, RECOVERY }
 
 @export var player_sprite: Sprite2D
 @export var camera: Camera2D
-
-@export_group("Sword Tips")
-@export var blade_tip_distance: float = 24.0
-@export var hilt_tip_distance: float = 12.0
 
 @export_group("Floating")
 @export var orbit_speed: float = 10.0
@@ -26,14 +25,10 @@ enum AttackType { NONE, LEFT, CENTER, HEAVY }
 @export_group("Side View")
 @export var side_layer_switch_x: float = 8.0
 
-@export_group("Magic Trail")
-@export var magic_handle_offset: Vector2 = Vector2(0.0, 12.0)
-@export var magic_blade_offset: Vector2 = Vector2(0.0, -24.0)
-@export var magic_emission_radius: float = 3.0
-
 @export_group("Left: Double Swipe")
 @export var left_range: float = 100.0
 @export var left_arc_degrees: float = 160.0
+@export var left_windup_time: float = 0.06
 @export var left_swipe_time: float = 0.13
 @export var left_gap_time: float = 0.05
 @export var left_recovery_time: float = 0.10
@@ -63,22 +58,36 @@ enum AttackType { NONE, LEFT, CENTER, HEAVY }
 @export var thrust_damage: float = 2.0
 @export var heavy_damage: float = 3.0
 @export var heavy_impact_radius: float = 20.0
+@export var charged_damage_multiplier: float = 2.0
+@export var charged_radius_multiplier: float = 1.75
+@export var charged_stun_seconds: float = 0.5
 
 @export_group("Parry")
 @export var parry_window_seconds: float = 0.25
 @export var parry_stun_seconds: float = 1.0
 @export var block_distance: float = 28.0
 @export var late_block_damage_multiplier: float = 0.5
+@export_range(0.0, 360.0, 1.0) var block_arc_degrees: float = 120.0
 
 @onready var anchor: Node2D = get_parent() as Node2D
 @onready var player: Player = anchor.get_parent() as Player
 @onready var positions_root: Node2D = player.get_node("SwordPositions") as Node2D
 @onready var blade_hitbox: Area2D = $BladeHitbox
 @onready var hilt_hitbox: Area2D = $HiltHitbox
+@onready var blade_shape: CollisionShape2D = $BladeHitbox/CollisionShape2D
+@onready var hilt_shape: CollisionShape2D = $HiltHitbox/CollisionShape2D
+@onready var blade_tip: Marker2D = $BladeTip
+@onready var hilt_tip: Marker2D = $HiltTip
+@onready var visual: Sprite2D = $Visual
+@onready var hilt_fire: SwordHiltFire = $Visual/HiltFire
+@onready var charge_indicator: ProgressBar = player.get_node("HeavyCharge")
 
 var damaged_this_window: Dictionary = {}
 var pending_heavy_hit: bool = false
 var pending_heavy_position: Vector2 = Vector2.ZERO
+var pending_heavy_charge: float = 0.0
+var previous_strike_transform: Transform2D
+var has_previous_strike: bool = false
 
 var selected_position := SwordPosition.RIGHT
 var via_middle_key: bool = false
@@ -93,7 +102,6 @@ var is_striking: bool = false
 
 var elapsed_time: float = 0.0
 var orbit_angle: float = 0.0
-var magic_trail: CPUParticles2D
 var current_orbit_radius: float = 24.0
 var resting_rotation: float = 0.0
 var trail_offset: Vector2 = Vector2.ZERO
@@ -119,11 +127,13 @@ var charge: float = 0.0
 var shake_left: float = 0.0
 var shake_offset: Vector2 = Vector2.ZERO
 var camera_rest_offset: Vector2 = Vector2.ZERO
+var shake_active: bool = false
 
 func _ready() -> void:
 	if not is_instance_valid(player_sprite):
 		push_error("Assign the player's Sprite2D to Player Sprite.")
 		set_process(false)
+		set_physics_process(false)
 		return
 
 	orbit_angle = resting_angle()
@@ -133,12 +143,27 @@ func _ready() -> void:
 	if is_instance_valid(camera):
 		camera_rest_offset = camera.offset
 
-	setup_magic_trail()
+	player.died.connect(on_player_died)
+	update_combat_pose()
 
 
 func _process(delta: float) -> void:
 	elapsed_time += delta
+	update_trail(delta)
+	update_shake(delta)
+	update_visuals(delta)
+	charge_indicator.visible = is_attacking and attack_type == AttackType.HEAVY
+	charge_indicator.value = charge
+	charge_indicator.modulate = Color(1.0, 0.85, 0.3) if charge >= 0.999 else Color.WHITE
+
+
+func _physics_process(delta: float) -> void:
+	if player.health <= 0.0:
+		on_player_died()
+		return
+
 	cooldown_left = maxf(cooldown_left - delta, 0.0)
+	update_parry(delta)
 
 	if not is_attacking and not is_blocking:
 		read_sword_inputs()
@@ -146,37 +171,96 @@ func _process(delta: float) -> void:
 		if Input.is_action_just_pressed("attack") and cooldown_left <= 0.0:
 			start_attack()
 
+	# Short steps follow curved swipes even when the physics rate is low.
+	var steps := maxi(1, ceili(delta / (1.0 / 120.0)))
+	for step in range(steps):
+		advance_combat(delta / steps)
+	# Observe the finished physics pose once per tick; render-frame jitter must not drive jets.
+	var fire_energy := 0.0
+	if is_attacking:
+		fire_energy = 1.0 if is_striking else 0.35
+		if attack_type == AttackType.HEAVY:
+			fire_energy = 1.0 + charge * 0.4 if attack_phase == 1 else 0.25 + charge * 0.35
+	hilt_fire.sample_motion(
+		global_position + Vector2.UP * attack_height, global_rotation, delta, fire_energy
+	)
+
+
+func advance_combat(delta: float) -> void:
+	var was_striking := is_striking
+	var damage := thrust_damage if attack_type == AttackType.CENTER else swipe_damage
+	var hit_shape := hilt_shape if hilt_first else blade_shape
+	var start_transform := (
+		previous_strike_transform if has_previous_strike else hit_shape.global_transform
+	)
 	if is_attacking:
 		update_attack(delta)
 	elif is_blocking:
 		update_block(delta)
 	else:
 		update_idle(delta)
+	update_combat_pose()
 
-	update_trail(delta)
-	update_shake(delta)
-	update_visuals(delta)
-	update_magic_trail()
-
-
-func _physics_process(delta: float) -> void:
-	update_parry(delta)
-	if is_striking:
-		var hitbox := hilt_hitbox if hilt_first else blade_hitbox
-		var damage := (
-			thrust_damage
-			if attack_type == AttackType.CENTER
-			else swipe_damage
-		)
-
-		for body in hitbox.get_overlapping_bodies():
-			if body is Enemy and not damaged_this_window.has(body):
-				damaged_this_window[body] = true
-				body.take_damage(damage)
-
+	# Include the final pose before closing a window, but never sweep the windup.
+	if was_striking or is_striking:
+		if not was_striking:
+			start_transform = hit_shape.global_transform
+		damage_sweep(hit_shape, start_transform, hit_shape.global_transform, damage)
+	previous_strike_transform = hit_shape.global_transform
+	has_previous_strike = is_striking
 	if pending_heavy_hit:
 		pending_heavy_hit = false
 		damage_heavy_impact()
+
+
+func damage_sweep(
+	hit_shape: CollisionShape2D, from: Transform2D, to: Transform2D, damage: float
+) -> void:
+	var rectangle := hit_shape.shape as RectangleShape2D
+	var half_size := rectangle.size * 0.5
+	var corners := PackedVector2Array([
+		Vector2(-half_size.x, -half_size.y), Vector2(half_size.x, -half_size.y),
+		Vector2(half_size.x, half_size.y), Vector2(-half_size.x, half_size.y)
+	])
+	var turn := absf(angle_difference(from.get_rotation(), to.get_rotation()))
+	var segments := maxi(1, ceili(turn / deg_to_rad(5.0)))
+	var previous := from
+	for segment in range(1, segments + 1):
+		var current := from.interpolate_with(to, float(segment) / segments)
+		var points := PackedVector2Array()
+		for corner in corners:
+			points.append(previous * corner)
+			points.append(current * corner)
+		var hull := Geometry2D.convex_hull(points)
+		hull.remove_at(hull.size() - 1) # convex_hull repeats the first point.
+		var swept_shape := ConvexPolygonShape2D.new()
+		swept_shape.points = hull
+		var query := PhysicsShapeQueryParameters2D.new()
+		query.shape = swept_shape
+		query.collision_mask = (hit_shape.get_parent() as Area2D).collision_mask
+		damage_query(query, damage, damaged_this_window)
+		previous = current
+
+
+func damage_query(
+	query: PhysicsShapeQueryParameters2D, damage: float, damaged: Dictionary,
+	stun_seconds: float = 0.0
+) -> void:
+	var excluded: Array[RID] = [player.get_rid()]
+	# Paginate so walls or a crowd cannot consume the result limit.
+	while true:
+		query.exclude = excluded
+		var results := get_world_2d().direct_space_state.intersect_shape(query, 32)
+		for result in results:
+			excluded.append(result["rid"])
+			var body = result["collider"]
+			if body is Enemy and not body.is_queued_for_deletion() and not damaged.has(body):
+				damaged[body] = true
+				body.take_damage(damage)
+				if stun_seconds > 0.0 and body.health > 0.0:
+					body.stun(stun_seconds)
+		if results.size() < 32:
+			break
 
 
 func update_parry(delta: float) -> void:
@@ -193,7 +277,17 @@ func update_parry(delta: float) -> void:
 
 
 func defend_against_attack(attacker: Node, parryable: bool) -> float:
-	if not is_blocking or not parryable:
+	if player.health <= 0.0 or not is_blocking or not parryable:
+		return 1.0
+	if not is_instance_valid(attacker) or not attacker is Node2D:
+		return 1.0
+	var toward_attacker := (attacker as Node2D).global_position - player.global_position
+	var guard_direction := Vector2.UP.rotated(player.global_rotation + orbit_angle)
+	if (
+		toward_attacker.length_squared() > 0.001
+		and guard_direction.dot(toward_attacker.normalized())
+		< cos(deg_to_rad(block_arc_degrees) * 0.5) - 0.00001
+	):
 		return 1.0
 
 	if parry_window_left > 0.0:
@@ -395,7 +489,11 @@ func update_idle(delta: float) -> void:
 
 
 func striking_tip_distance() -> float:
-	return hilt_tip_distance if hilt_first else blade_tip_distance
+	return absf(striking_tip().position.y)
+
+
+func striking_tip() -> Marker2D:
+	return hilt_tip if hilt_first else blade_tip
 
 
 func capture_mouse_aim(max_range: float) -> void:
@@ -419,6 +517,8 @@ func capture_mouse_aim(max_range: float) -> void:
 
 
 func start_attack() -> void:
+	if player.health <= 0.0 or is_attacking or is_blocking:
+		return
 	via_middle_key = false
 	transition_active = false
 	attack_start_angle = orbit_angle
@@ -432,12 +532,13 @@ func start_attack() -> void:
 	attack_phase = 0
 	phase_time = 0.0
 	is_attacking = true
+	has_previous_strike = false
 
 	match selected_position:
 		SwordPosition.LEFT:
 			attack_type = AttackType.LEFT
 			capture_mouse_aim(left_range)
-			set_striking(true)
+			attack_phase = LeftAttackPhase.WINDUP
 
 		SwordPosition.CENTER:
 			attack_type = AttackType.CENTER
@@ -448,6 +549,7 @@ func start_attack() -> void:
 			capture_mouse_aim(heavy_range)
 			charge = 0.0
 			player.heavy_attack_locked = true
+	update_combat_pose()
 
 
 func update_attack(delta: float) -> void:
@@ -481,50 +583,82 @@ func finish_attack() -> void:
 	cooldown_left = attack_cooldown
 
 
+func cancel_combat() -> void:
+	hilt_fire.end_power_release()
+	set_striking(false)
+	is_attacking = false
+	is_blocking = false
+	attack_type = AttackType.NONE
+	attack_phase = 0
+	phase_time = 0.0
+	parry_window_left = 0.0
+	pending_heavy_hit = false
+	pending_heavy_position = Vector2.ZERO
+	pending_heavy_charge = 0.0
+	has_previous_strike = false
+	damaged_this_window.clear()
+	player.heavy_attack_locked = false
+	charge = 0.0
+	attack_height = 0.0
+	charge_indicator.hide()
+	stop_camera_shake()
+
+
+func on_player_died() -> void:
+	cancel_combat()
+	hilt_fire.extinguish()
+	set_process(false)
+	set_physics_process(false)
+
+
 func update_left_attack() -> void:
 	var half_arc := deg_to_rad(left_arc_degrees) / 2.0
+	var swipe_start_angle := aim_angle - half_arc
+	var swipe_end_angle := aim_angle + half_arc
 
 	match attack_phase:
-		0:
-			# First wide swipe toward the right.
+		LeftAttackPhase.WINDUP:
+			# Reach the same starting edge from every resting slot without dealing damage.
+			var progress := minf(
+				phase_time / maxf(left_windup_time, 0.001),
+				1.0
+			)
+			attack_angle = lerp_angle(
+				attack_start_angle, swipe_start_angle, progress
+			)
+			attack_center = attack_start_center.lerp(
+				Vector2.UP.rotated(swipe_start_angle) * strike_center_distance, progress
+			)
+			if progress >= 1.0:
+				next_phase()
+				set_striking(true)
+
+		LeftAttackPhase.FIRST_SWIPE:
 			var progress := minf(
 				phase_time / maxf(left_swipe_time, 0.001),
 				1.0
 			)
-
-			attack_angle = lerp_angle(
-				attack_start_angle,
-				aim_angle + half_arc,
-				progress
-			)
-			var radius := lerpf(
-				attack_start_center.length(),
-				strike_center_distance,
-				progress
-			)
-			attack_center = Vector2.UP.rotated(attack_angle) * radius
+			# Explicit endpoints keep the first swipe crossing the aim direction.
+			attack_angle = lerpf(swipe_start_angle, swipe_end_angle, progress)
+			attack_center = Vector2.UP.rotated(attack_angle) * strike_center_distance
 
 			if progress >= 1.0:
 				set_striking(false)
 				next_phase()
 
-		1:
+		LeftAttackPhase.GAP:
 			if phase_time >= left_gap_time:
 				next_phase()
 				set_striking(true)
 
-		2:
+		LeftAttackPhase.SECOND_SWIPE:
 			# Second wide swipe back toward the left.
 			var progress := minf(
 				phase_time / maxf(left_swipe_time, 0.001),
 				1.0
 			)
 
-			attack_angle = lerp_angle(
-				aim_angle + half_arc,
-				aim_angle - half_arc,
-				progress
-			)
+			attack_angle = lerpf(swipe_end_angle, swipe_start_angle, progress)
 			attack_center = (
 				Vector2.UP.rotated(attack_angle)
 				* strike_center_distance
@@ -534,14 +668,14 @@ func update_left_attack() -> void:
 				set_striking(false)
 				next_phase()
 
-		3:
+		LeftAttackPhase.RECOVERY:
 			var progress := minf(
 				phase_time / maxf(left_recovery_time, 0.001),
 				1.0
 			)
 
 			attack_angle = lerp_angle(
-				aim_angle - half_arc,
+				swipe_start_angle,
 				resting_angle(),
 				progress
 			)
@@ -663,6 +797,8 @@ func update_heavy_attack(delta: float) -> void:
 			# Full charge stays held. Only releasing starts the slam.
 			if not Input.is_action_pressed("attack"):
 				slam_start_center = attack_center
+				if charge >= 0.999:
+					hilt_fire.begin_power_release(aim_direction.rotated(player.global_rotation))
 				next_phase()
 
 		1:
@@ -737,31 +873,34 @@ func set_striking(value: bool) -> void:
 
 func damage_heavy_impact() -> void:
 	var circle := CircleShape2D.new()
-	circle.radius = heavy_impact_radius
+	circle.radius = heavy_impact_radius * lerpf(1.0, charged_radius_multiplier, pending_heavy_charge)
 
 	var query := PhysicsShapeQueryParameters2D.new()
 	query.shape = circle
 	query.transform = Transform2D(0.0, pending_heavy_position)
-	query.exclude = [player.get_rid()]
-
-	for result in get_world_2d().direct_space_state.intersect_shape(query):
-		var body = result["collider"]
-
-		if body is Enemy:
-			if body.global_position.distance_to(player.global_position) <= heavy_range:
-				body.take_damage(heavy_damage)
+	query.collision_mask = blade_hitbox.collision_mask
+	var damage := heavy_damage * lerpf(1.0, charged_damage_multiplier, pending_heavy_charge)
+	var stun_seconds := charged_stun_seconds if pending_heavy_charge >= 0.999 else 0.0
+	damage_query(query, damage, {}, stun_seconds)
 
 
 func trigger_heavy_impact() -> void:
+	hilt_fire.end_power_release()
 	var impact_position := player.to_global(
 		aim_direction * tip_target_distance
 	)
 	pending_heavy_position = impact_position
+	pending_heavy_charge = charge
 	pending_heavy_hit = true
 	heavy_impact.emit(impact_position, charge)
 
 	if charge < 0.999:
 		return
+
+	var explosion := FLAME_EXPLOSION.new()
+	explosion.burst_radius = heavy_impact_radius * charged_radius_multiplier * 1.4
+	get_tree().current_scene.add_child(explosion)
+	explosion.global_position = impact_position
 
 	camera = get_viewport().get_camera_2d()
 
@@ -769,7 +908,9 @@ func trigger_heavy_impact() -> void:
 		push_warning("Heavy attack cannot shake: no active Camera2D.")
 		return
 
-	camera_rest_offset = camera.offset
+	if not shake_active:
+		camera_rest_offset = camera.offset
+	shake_active = true
 	shake_left = shake_time
 
 
@@ -813,41 +954,15 @@ func update_shake(delta: float) -> void:
 		if is_instance_valid(camera):
 			camera.offset = camera_rest_offset + shake_offset
 	else:
-		shake_offset = Vector2.ZERO
-
-		if is_instance_valid(camera) and camera.offset != camera_rest_offset:
-			camera.offset = camera_rest_offset
+		stop_camera_shake()
 
 
-func setup_magic_trail() -> void:
-	magic_trail = CPUParticles2D.new()
-	magic_trail.name = "MagicTrail"
-	magic_trail.amount = 10
-	magic_trail.lifetime = 0.7
-	magic_trail.local_coords = false
-	magic_trail.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
-	magic_trail.emission_sphere_radius = magic_emission_radius
-	magic_trail.direction = Vector2.DOWN
-	magic_trail.spread = 20.0
-	magic_trail.gravity = Vector2(0.0, 120.0)
-	magic_trail.initial_velocity_min = 0.0
-	magic_trail.initial_velocity_max = 5.0
-	magic_trail.scale_amount_min = 1.0
-	magic_trail.scale_amount_max = 2.0
-	magic_trail.color = Color(1.0, 0.45, 0.75, 0.85)
-
-	var fade := Gradient.new()
-	fade.set_color(0, Color.WHITE)
-	fade.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
-	magic_trail.color_ramp = fade
-	magic_trail.position = magic_handle_offset
-	add_child(magic_trail)
-	magic_trail.global_rotation = 0.0
-
-
-func update_magic_trail() -> void:
-	magic_trail.position = magic_blade_offset if hilt_first else magic_handle_offset
-	magic_trail.global_rotation = 0.0
+func stop_camera_shake() -> void:
+	if shake_active and is_instance_valid(camera):
+		camera.offset = camera_rest_offset
+	shake_active = false
+	shake_left = 0.0
+	shake_offset = Vector2.ZERO
 
 
 func update_draw_order(center: Vector2) -> void:
@@ -868,13 +983,7 @@ func update_draw_order(center: Vector2) -> void:
 	z_index = player_sprite.z_index - anchor.z_index + (-1 if behind_player else 1)
 
 
-func update_visuals(delta: float) -> void:
-	var phase := elapsed_time * TAU * hover_frequency
-	var hover_offset := Vector2(
-		sin(phase),
-		cos(phase * 0.7)
-	) * hover_amount
-
+func update_combat_pose() -> void:
 	var center: Vector2
 
 	if is_attacking:
@@ -886,13 +995,6 @@ func update_visuals(delta: float) -> void:
 		)
 
 	update_draw_order(center)
-	global_position = (
-		player.to_global(center)
-		+ hover_offset
-		+ trail_offset
-		+ shake_offset * 0.25
-		+ Vector2.UP * attack_height
-	)
 
 	var target_rotation: float
 
@@ -909,8 +1011,24 @@ func update_visuals(delta: float) -> void:
 	if hilt_first:
 		target_rotation += PI
 
-	global_rotation = lerp_angle(
-		global_rotation,
-		target_rotation,
-		1.0 - exp(-blade_rotation_speed * delta)
-	)
+	# Correct the small sideways offset of each tip as well as its reach.
+	if is_attacking:
+		center -= Vector2(striking_tip().position.x, 0.0).rotated(
+			target_rotation - player.global_rotation
+		)
+	global_position = player.to_global(center)
+	global_rotation = target_rotation
+
+
+func update_visuals(delta: float) -> void:
+	if is_attacking or is_blocking:
+		# During combat the visible blade follows the collision pose exactly.
+		visual.global_position = global_position + Vector2.UP * attack_height
+		visual.rotation = 0.0
+	else:
+		var phase := elapsed_time * TAU * hover_frequency
+		var hover_offset := Vector2(sin(phase), cos(phase * 0.7)) * hover_amount
+		visual.global_position = global_position + hover_offset + trail_offset + shake_offset * 0.25
+		visual.global_rotation = lerp_angle(
+			visual.global_rotation, global_rotation, 1.0 - exp(-blade_rotation_speed * delta)
+		)
